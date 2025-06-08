@@ -5,6 +5,7 @@ import blog.entity.Blog;
 import blog.mapper.BlogMapper;
 import blog.repository.BlogRepository;
 import blog.service.BlogService;
+import blog.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,9 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public BlogDTO getBlogById(Long id) {
-        Blog blog = blogRepository.findById(id).orElseThrow();
+        Blog blog = blogRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Blog", "id", id)
+        );
         return blogMapper.toDto(blog);
     }
     @Override
@@ -44,7 +47,9 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public BlogDTO updateBlog(Long id, BlogDTO blogDTO) {
-        Blog blog = blogRepository.findById(id).orElseThrow();
+        Blog blog = blogRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Blog", "id", id)
+        );
         blogMapper.updateEntityFromDto(blogDTO, blog);
         blog = blogRepository.save(blog);
         return blogMapper.toDto(blog);

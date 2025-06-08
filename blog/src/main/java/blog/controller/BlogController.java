@@ -22,7 +22,7 @@ import java.util.List;
     @RequestMapping("/blogs")
     @Tag(name = "Blog Controller", description = "APIs for managing blog posts")
     public class BlogController {
-    
+
         private final BlogService blogService;
     
         @Autowired
