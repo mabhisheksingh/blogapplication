@@ -1,0 +1,45 @@
+server:
+  port: 9001
+
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    oauth:
+      realm: fusion-master
+      clientId: blog-auth-private
+      clientSecret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
+spring:
+  application:
+    name: blog-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    user:
+      name: fusion
+      password: fusion
+    oauth2:
+      authorizationserver:
+        client:
+          registration:
+            keycloak:
+              client-id: blog-auth-private
+              client-secret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
+              client-name: fusion-master
+              authorization-grant-type: authorization_code
+              redirect-uri: http://localhost:9002/login/oauth2/code
+
