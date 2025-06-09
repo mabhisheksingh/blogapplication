@@ -8,14 +8,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("My API")
-                        .version("1.0")
-                        .description("This is a sample Spring Boot 3.5 API with Swagger")
-
-                );
-    }
+  @Bean
+  public OpenAPI customOpenAPI() {
+    return new OpenAPI()
+        .info(
+            new Info()
+                .title("My API")
+                .version("1.0")
+                .description("This is a sample Spring Boot 3.5 API with Swagger"));
+  }
 }

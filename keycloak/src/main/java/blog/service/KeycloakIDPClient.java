@@ -1,4 +1,3 @@
 package blog.service;
 
-public interface KeycloakIDPClient extends IDPClient {
-}
+public interface KeycloakIDPClient extends IDPClient {}

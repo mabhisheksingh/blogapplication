@@ -4,10 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.*;
-
 import java.time.LocalDateTime;
-
+import lombok.*;
 
 @Entity
 @Builder
@@ -16,59 +14,55 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Blog {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    private String title;
-    private String content;
-    
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-    
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    // Explicit getters and setters for MapStruct
-    public Long getId() {
-        return id;
-    }
+  private String title;
+  private String content;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  @Builder.Default private LocalDateTime createdAt = LocalDateTime.now();
 
+  @Builder.Default private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public String getTitle() {
-        return title;
-    }
+  // Explicit getters and setters for MapStruct
+  public Long getId() {
+    return id;
+  }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public String getContent() {
-        return content;
-    }
+  public String getTitle() {
+    return title;
+  }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
+  public String getContent() {
+    return content;
+  }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public void setContent(String content) {
+    this.content = content;
+  }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
 }

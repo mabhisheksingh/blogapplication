@@ -1,17 +1,20 @@
 server:
   port: 9001
+  servlet:
+    context-path: /
 
 springdoc:
   api-docs:
-    path: /v1/api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    enabled: true
     tags-sorter: alpha
+    enabled: true
     oauth:
       realm: fusion-master
-      clientId: blog-auth-private
-      clientSecret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
+      client-id: blog-auth-private
+      client-secret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
+
 spring:
   application:
     name: blog-service
