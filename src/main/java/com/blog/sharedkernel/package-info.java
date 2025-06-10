@@ -1,6 +1,6 @@
 /**
- * Module containing shared kernel components used across other modules.
- * This includes common utilities, base classes, and shared domain concepts.
+ * Module containing shared kernel components used across other modules. This includes common
+ * utilities, base classes, and shared domain concepts.
  */
 @ApplicationModule
 @NamedInterface("sharedkernel")

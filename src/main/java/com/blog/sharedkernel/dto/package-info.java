@@ -1,5 +1,5 @@
 /** Package containing shared exception classes used across modules. */
-@NamedInterface("sharedkernel.exception")
-package com.blog.sharedkernel.exception;
+@NamedInterface("sharedkernel.dto")
+package com.blog.sharedkernel.dto;
 
 import org.springframework.modulith.NamedInterface;
