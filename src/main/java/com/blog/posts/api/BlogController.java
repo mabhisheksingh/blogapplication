@@ -30,10 +30,8 @@ public class BlogController {
   @GetMapping("/api/protected/posts")
   public String getProtectedPosts() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
     String username = authentication.getName(); // The subject of the JWT (e.g., 'user')
     System.out.println("Authenticated user: " + username);
-
     // If you need specific claims from the JWT
     if (authentication.getPrincipal() instanceof Jwt jwt) {
       String issuedBy = jwt.getIssuer().toString(); // The issuer (Auth Server)
