@@ -1,33 +1,49 @@
-# Blog Application (DDD Architecture)
+# Blog Application (DDD Architecture with Spring Modulith)
 
-A modern blog application built with Spring Boot 3.5.0 and Domain-Driven Design principles.
+A modern blog application built with Spring Boot 3.5.0, Spring Modulith, and Domain-Driven Design principles.
 
 ## Project Structure
 
-The project follows Domain-Driven Design (DDD) principles with the following structure:
+The project follows a modular architecture using Spring Modulith with the following modules:
 
 ```
-src/main/java/com/blog/
+com.blog
 ├── BlogApplication.java          # Main application class
 │
-├── domain/                       # Domain layer (business logic)
-│   ├── model/                    # Domain entities and value objects
-│   ├── repository/                # Domain repository interfaces
-│   └── service/                  # Domain services
+├── sharedkernel/                # Shared kernel module (common components)
+│   └── exception/               # Shared exceptions and base classes
 │
-├── application/                 # Application layer (use cases)
-│   ├── dto/                      # Data Transfer Objects
-│   ├── service/                  # Application services
-│   ├── command/                  # Command objects
-│   └── query/                    # Query objects
+├── posts/                      # Posts module
+│   ├── api/                     # REST controllers
+│   ├── dto/                     # Data Transfer Objects
+│   ├── model/                   # Domain model
+│   ├── repository/              # Data access
+│   ├── service/                 # Business logic
+│   └── mapper/                  # Object mapping
 │
-└── infrastructure/              # Infrastructure layer
-    ├── config/                   # Configuration classes
-    ├── exception/                # Exception handling
-    ├── persistence/              # Persistence implementation
-    │   └── mapper/               # Object mappers (e.g., MapStruct)
-    └── web/                      # Web controllers and REST endpoints
+├── auth/                       # Authentication module
+│   └── config/                  # Security configuration
+│
+├── comments/                   # Comments module (future)
+└── search/                     # Search module (future)
 ```
+
+## Version History
+
+| Version | Date       | Description                                                                 |
+|---------|------------|-----------------------------------------------------------------------------|
+| v1.0.0  | 2025-06-10 | Initial stable release with Spring Modulith integration and basic blog features |
+|         |            | - Modular architecture with posts, auth, and sharedkernel modules           |
+|         |            | - JWT authentication support                                                |
+|         |            | - Basic CRUD operations for blog posts                                      |
+
+## Key Features
+
+- **Modular Architecture**: Built with Spring Modulith for clear module boundaries
+- **JWT Authentication**: Secure API endpoints with JWT tokens
+- **RESTful API**: Clean, resource-oriented API design
+- **OpenAPI Documentation**: Auto-generated API documentation
+- **Exception Handling**: Consistent error responses with proper HTTP status codes
 
 ## Prerequisites
 
@@ -117,50 +133,3 @@ mvn test
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-A modular blog application built with Spring Boot 3.5.0 and Java 17.
-
-## Project Structure
-
-This is a multi-module Maven project with the following modules:
-
-1. **blog** - Main application module containing core blog functionality
-2. **common-exceptions** - Shared exception handling and error responses
-3. **keycloak** - Keycloak integration for authentication and authorization
-
-## Prerequisites
-
-- Java 17 or higher
-- Maven 3.6.3 or higher
-- PostgreSQL
-- Keycloak (for authentication)
-
-## Getting Started
-
-1. Clone the repository
-2. Configure your database in `application.yml`
-3. Set up Keycloak and update the configuration
-4. Run `mvn clean install` from the root directory
-5. Start the application using `mvn spring-boot:run` in the blog module
-
-## Features
-
-- RESTful API for blog management
-- JWT-based authentication with Keycloak
-- Input validation
-- Global exception handling
-- OpenAPI documentation
-
-## API Documentation
-
-Once the application is running, you can access:
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/v3/api-docs
-
-## Build & Run
-
-```bash
-mvn clean install
-cd blog
-mvn spring-boot:run
-```
