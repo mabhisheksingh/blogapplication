@@ -15,8 +15,6 @@ public interface CommentMapper extends BaseMapper<CommentDto, Comment> {
 
   @Override
   @Mapping(target = "id", source = "id")
-  @Mapping(target = "createdAt", source = "createdAt")
-  @Mapping(target = "updatedAt", source = "updatedAt")
   @Mapping(target = "replies", ignore = true)
   @Mapping(target = "parent", ignore = true) // Will be set manually in service
   Comment toEntity(CommentDto dto);

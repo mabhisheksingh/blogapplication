@@ -21,7 +21,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/blogs")
+@RequestMapping("/v1/api//blogs")
 @Tag(name = "Blog Controller", description = "APIs for managing blog posts")
 public class BlogController {
 

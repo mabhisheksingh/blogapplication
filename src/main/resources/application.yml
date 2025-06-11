@@ -1,3 +1,10 @@
+idp:
+    idpName: keycloak
+    clientId: blog-auth-private
+    clientSecret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
+    serverUri: http://localhost:9003
+    realm: fusion-master
+    authorizationGrantType: authorization_code
 
 
 server:
@@ -27,19 +34,22 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: 'create-drop'
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
   security:
-#    oauth2:
-#      resourceserver:
-#        jwt:
-#          issuer-uri: http://localhost:8080/realms/fusion-master
-#          jwk-set-uri: http://localhost:8080/realms/fusion-master/protocol/openid-connect/certs
-#          audience: account
+    #    oauth2:
+    #      resourceserver:
+    #        jwt:
+    #          issuer-uri: http://localhost:8080/realms/fusion-master
+    #          jwk-set-uri: http://localhost:8080/realms/fusion-master/protocol/openid-connect/certs
+    #          audience: account
     oauth2:
       resourceserver:
         jwt:
@@ -49,7 +59,6 @@ spring:
           keycloak:
             client-id: blog-auth-private
             client-secret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
-            scope: openid,profile,email
             authorization-grant-type: authorization_code
             redirect-uri: http://localhost:9003/login/oauth2/code/keycloak
         provider:
@@ -59,4 +68,12 @@ spring:
   docker:
     compose:
       lifecycle-management: START_AND_STOP
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.type.descriptor.sql.BasicExtractor: TRACE
+
+
 

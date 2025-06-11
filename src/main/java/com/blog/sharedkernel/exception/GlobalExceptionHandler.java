@@ -2,12 +2,19 @@ package com.blog.sharedkernel.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.NotAuthorizedException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
+import org.springframework.orm.jpa.JpaSystemException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @ControllerAdvice
@@ -29,6 +36,22 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(ex.getStatus()).body(errorResponse);
   }
 
+  @ExceptionHandler({
+    NotAuthorizedException.class,
+    AuthenticationException.class,
+    HttpClientErrorException.Unauthorized.class
+  })
+  public ResponseEntity<ErrorResponse> authenticationException(NotAuthorizedException ex) {
+    log.error("Authentication exception: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+        new ErrorResponse(
+            HttpStatus.UNAUTHORIZED,
+            HttpStatus.UNAUTHORIZED.name(),
+            ex.getMessage(),
+            ex.getStackTrace());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+  }
+
   @ExceptionHandler({ConstraintViolationException.class})
   public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
     log.error("Constraint violation: {}", ex.getMessage(), ex);
@@ -41,6 +64,41 @@ public class GlobalExceptionHandler {
     ErrorResponse errorResponse =
         new ErrorResponse(HttpStatus.BAD_REQUEST, "CONSTRAINT_VIOLATION", message);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  @ExceptionHandler(JpaSystemException.class)
+  public ResponseEntity<ErrorResponse> handleJpaSystemException(JpaSystemException ex) {
+    log.error("JPA system error: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+        new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "JPA_SYSTEM_ERROR",
+            "An error occurred while processing your request");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+  }
+
+  @ExceptionHandler(JpaObjectRetrievalFailureException.class)
+  public ResponseEntity<ErrorResponse> handleJpaObjectRetrievalFailure(
+      JpaObjectRetrievalFailureException ex) {
+    log.error("JPA object retrieval failure: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+        new ErrorResponse(
+            HttpStatus.NOT_FOUND, "ENTITY_NOT_FOUND", "The requested resource was not found");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+  }
+
+  @ExceptionHandler({
+    OptimisticLockingFailureException.class,
+    ObjectOptimisticLockingFailureException.class
+  })
+  public ResponseEntity<ErrorResponse> handleOptimisticLockingFailure(RuntimeException ex) {
+    log.error("Optimistic locking failure: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+        new ErrorResponse(
+            HttpStatus.CONFLICT,
+            "OPTIMISTIC_LOCKING_FAILURE",
+            "The data was updated by another user. Please refresh and try again.");
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
   }
 
   @ExceptionHandler({RuntimeException.class})
