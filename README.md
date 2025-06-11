@@ -32,6 +32,11 @@ com.blog
 
 | Version | Date       | Description                                                                 |
 |---------|------------|-----------------------------------------------------------------------------|
+| v1.1.0  | 2025-06-12 | Enhanced authentication and admin features                                  |
+|         |            | - Added admin and user management controllers                               |
+|         |            | - Implemented user CRUD operations with Keycloak integration               |
+|         |            | - Added exception handling for user management                              |
+|         |            | - Improved configuration management with IDP settings                       |
 | v1.0.0  | 2025-06-10 | Initial stable release with Spring Modulith integration and basic blog features |
 |         |            | - Modular architecture with posts, auth, and sharedkernel modules           |
 |         |            | - JWT authentication support                                                |
@@ -40,6 +45,9 @@ com.blog
 ## Key Features
 
 - **Modular Architecture**: Built with Spring Modulith for clear module boundaries
+- **User Management**: Complete user CRUD operations with role-based access control
+- **Admin Dashboard**: Dedicated admin interface for user management
+- **Keycloak Integration**: Seamless authentication and authorization with Keycloak
 - **JWT Authentication**: Secure API endpoints with JWT tokens
 - **RESTful API**: Clean, resource-oriented API design
 - **OpenAPI Documentation**: Auto-generated API documentation
