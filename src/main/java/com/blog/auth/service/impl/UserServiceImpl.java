@@ -3,11 +3,12 @@ package com.blog.auth.service.impl;
 import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.request.UpdateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
+import com.blog.auth.exception.UserNotFoundException;
 import com.blog.auth.mapper.UserMapper;
 import com.blog.auth.model.User;
 import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.UserService;
-import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,37 +52,14 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public CreateUserResponse changeUserPassword(String userId, String newPassword) {
-    return null;
-  }
-
-  @Override
-  public Boolean deleteUser(String userId) {
-    return null;
-  }
-
-  @Override
-  public CreateUserResponse getUserById(String userId) {
-    return null;
-  }
-
-  @Override
-  public CreateUserResponse disableUser(String userId) {
-    return null;
-  }
-
-  @Override
-  public CreateUserResponse enableUser(String userId) {
-    return null;
-  }
-
-  @Override
-  public CreateUserResponse listUserWithPagination(int page, int size) {
-    return null;
-  }
-
-  @Override
-  public List<CreateUserResponse> listAllUser() {
-    return List.of();
+  public CreateUserResponse getUserById(Long userId) {
+    log.info("UserServiceImpl getUserById called");
+    log.debug("UserServiceImpl getUserById userId: {}", userId);
+    Optional<User> user = userRepository.findById(userId);
+    CreateUserResponse createUserResponse =
+        user.map(u -> userMapper.toCreateUserResponse(u))
+            .orElseThrow(() -> new UserNotFoundException(userId.toString()));
+    log.debug("UserServiceImpl getUserById response: {}", createUserResponse);
+    return createUserResponse;
   }
 }
