@@ -2,7 +2,6 @@ package com.blog.sharedkernel.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.ws.rs.NotAuthorizedException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -11,13 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.orm.jpa.JpaSystemException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
   @ExceptionHandler({BaseException.class})
@@ -36,20 +36,25 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(ex.getStatus()).body(errorResponse);
   }
 
-  @ExceptionHandler({
-    NotAuthorizedException.class,
-    AuthenticationException.class,
-    HttpClientErrorException.Unauthorized.class
-  })
-  public ResponseEntity<ErrorResponse> authenticationException(NotAuthorizedException ex) {
-    log.error("Authentication exception: {}", ex.getMessage(), ex);
-    ErrorResponse errorResponse =
-        new ErrorResponse(
-            HttpStatus.UNAUTHORIZED,
-            HttpStatus.UNAUTHORIZED.name(),
-            ex.getMessage(),
-            ex.getStackTrace());
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+  @ExceptionHandler(HttpClientErrorException.Unauthorized.class)
+  public ResponseEntity<String> handleUnauthorized(HttpClientErrorException.Unauthorized ex) {
+    log.error("Unauthorized request: {}", ex.getMessage(), ex);
+    // This catches 401 returned by RestTemplate / Feign etc.
+    return new ResponseEntity<>("Unauthorized request", HttpStatus.UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<String> handleAccessDenied(AccessDeniedException ex) {
+    log.error("AccessDeniedException failed: {}", ex.getMessage(), ex);
+    // This catches Spring Security authentication errors
+    return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<String> handleAuthentication(AuthenticationException ex) {
+    log.error("Authentication failed: {}", ex.getMessage(), ex);
+    // This catches Spring Security authentication errors
+    return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler({ConstraintViolationException.class})

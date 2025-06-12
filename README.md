@@ -32,6 +32,9 @@ com.blog
 
 | Version | Date       | Description                                                                 |
 |---------|------------|-----------------------------------------------------------------------------|
+| v1.1.1  | 2025-06-12 | Bug fixes and documentation updates                                        |
+|         |            | - Updated README with latest version information                           |
+|         |            | - Fixed minor issues in global exception handling                          |
 | v1.1.0  | 2025-06-12 | Enhanced authentication and admin features                                  |
 |         |            | - Added admin and user management controllers                               |
 |         |            | - Implemented user CRUD operations with Keycloak integration               |

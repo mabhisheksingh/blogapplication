@@ -25,6 +25,9 @@ springdoc:
       client-secret: k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7
 
 spring:
+  devtools:
+    restart:
+      enabled: true
   application:
     name: blog-service
   datasource:
@@ -71,6 +74,7 @@ spring:
 
 logging:
   level:
+    org.springframework: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.hibernate.type.descriptor.sql.BasicExtractor: TRACE

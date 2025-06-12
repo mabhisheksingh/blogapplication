@@ -1,6 +1,9 @@
 package com.blog.auth.config;
 
+import com.blog.sharedkernel.exception.CustomAccessDeniedHandler;
+import com.blog.sharedkernel.exception.CustomAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -14,8 +17,20 @@ import org.springframework.security.web.SecurityFilterChain;
 @Slf4j
 public class SecurityConfig {
 
+  CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  CustomAccessDeniedHandler customAccessDeniedHandler;
+
+  @Autowired
+  public SecurityConfig(
+      CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+      CustomAccessDeniedHandler customAccessDeniedHandler) {
+    this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
+    this.customAccessDeniedHandler = customAccessDeniedHandler;
+  }
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    log.info("Configuring SecurityFilterChain.");
     http.authorizeHttpRequests(
             authorize ->
                 authorize
@@ -36,6 +51,10 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated() // All other requests require authentication
             )
+        .exceptionHandling(
+            ex ->
+                ex.authenticationEntryPoint(customAuthenticationEntryPoint)
+                    .accessDeniedHandler(customAccessDeniedHandler))
         // Enable OAuth2 Resource Server for JWT token validation
         .oauth2ResourceServer(
             oauth2ResourceServer -> oauth2ResourceServer.jwt(Customizer.withDefaults()));

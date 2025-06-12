@@ -25,6 +25,15 @@ public class ErrorResponse {
     this.details = null;
   }
 
+  public ErrorResponse(HttpStatus status, String code, String message) {
+    this.timestamp = LocalDateTime.now();
+    this.status = status.value();
+    this.error = status.getReasonPhrase();
+    this.code = code;
+    this.message = message;
+    this.details = null;
+  }
+
   public ErrorResponse(
       HttpStatus status, String code, String message, Map<String, Object> details) {
     this.timestamp = LocalDateTime.now();
