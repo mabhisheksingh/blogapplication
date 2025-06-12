@@ -60,8 +60,8 @@ com.blog
 
 - Java 17 or higher
 - Maven 3.6.3 or higher
-- PostgreSQL
-- Keycloak (for authentication)
+- PostgreSQL 14+
+- Keycloak 21+ (for authentication)
 
 ## Getting Started
 
@@ -71,30 +71,55 @@ com.blog
    cd blog-application
    ```
 
-2. **Configure the database**
-   Update `application.yml` with your database credentials:
+2. **Database Setup**
+   The application uses PostgreSQL. Update the following in `application.yml` if needed:
    ```yaml
    spring:
      datasource:
-       url: jdbc:postgresql://localhost:5432/blogdb
+       url: jdbc:postgresql://localhost:5432/postgres
        username: postgres
-       password: yourpassword
+       password: postgres
    ```
 
-3. **Set up Keycloak**
-   - Run Keycloak server
-   - Create a new realm and client
-   - Update `application.yml` with your Keycloak configuration
+3. **Keycloak Configuration**
+   The application is pre-configured to work with a Keycloak server running at `http://localhost:9003` with the following settings:
+   - Realm: `fusion-master`
+   - Client ID: `blog-auth-private`
+   - Client Secret: `k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7`
+   
+   Make sure your Keycloak server is running and the realm is properly configured before starting the application.
 
-4. **Build and run the application**
+4. **Build and Run**
    ```bash
+   # Build the application
    mvn clean install
+   
+   # Run the application
    mvn spring-boot:run
    ```
+   The application will start on port `9001`.
 
-5. **Access the application**
-   - API Documentation: http://localhost:8080/swagger-ui.html
-   - API Spec: http://localhost:8080/v3/api-docs
+5. **Access the Application**
+   - Application URL: http://localhost:9001
+   - API Documentation: http://localhost:9001/swagger-ui.html
+   - OpenAPI Specification: http://localhost:9001/v3/api-docs
+   - Keycloak Admin Console: http://localhost:9003/admin
+
+## Development
+
+### Database
+- Hibernate is configured with `ddl-auto: create-drop` for development
+- SQL logging is enabled with formatted output
+- Uses PostgreSQL dialect
+
+### Logging
+- Spring Framework: DEBUG
+- Hibernate SQL: DEBUG
+- SQL parameter binding: TRACE
+
+### Development Tools
+- Spring DevTools enabled for automatic application restart
+- Docker Compose lifecycle management enabled
 
 ## Development
 
