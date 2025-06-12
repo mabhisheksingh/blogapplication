@@ -1,6 +1,5 @@
-package com.blog.posts.exception;
+package com.blog.sharedkernel.exception;
 
-import com.blog.sharedkernel.exception.BaseException;
 import org.springframework.http.HttpStatus;
 
 public class BlogNotFoundException extends BaseException {

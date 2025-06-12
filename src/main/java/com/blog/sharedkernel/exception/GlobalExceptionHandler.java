@@ -1,6 +1,5 @@
 package com.blog.sharedkernel.exception;
 
-import com.blog.auth.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.util.Set;

@@ -1,11 +1,11 @@
 package com.blog.posts.service.impl;
 
 import com.blog.posts.dto.BlogDTO;
-import com.blog.posts.exception.BlogNotFoundException;
 import com.blog.posts.mapper.BlogMapper;
 import com.blog.posts.model.Blog;
 import com.blog.posts.repository.BlogRepository;
 import com.blog.posts.service.BlogService;
+import com.blog.sharedkernel.exception.BlogNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
