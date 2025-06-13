@@ -2,10 +2,13 @@ package com.blog.sharedkernel.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -35,7 +38,7 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
   }
 
-  @ExceptionHandler({ConstraintViolationException.class})
+  @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
     log.error("Constraint violation: {}", ex.getMessage(), ex);
     Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
@@ -49,15 +52,25 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<Map<String, String>> handleValidationExceptions(
+      MethodArgumentNotValidException ex) {
+    Map<String, String> errors = new HashMap<>();
+    ex.getBindingResult()
+        .getFieldErrors()
+        .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+    return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler({RuntimeException.class})
   public ResponseEntity<Object> handleRuntimeException(RuntimeException exception) {
-    log.error("Unexpected error occurred: {}", exception.getMessage(), exception);
+    log.error("RuntimeException: Unexpected error occurred: {}", exception.getMessage(), exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
   }
 
   @ExceptionHandler({Exception.class})
   public ResponseEntity<ErrorResponse> handleAllUncaughtException(Exception ex) {
-    log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
+    log.error("Exception: Unexpected error occurred: {}", ex.getMessage(), ex);
     ErrorResponse errorResponse =
         new ErrorResponse(
             HttpStatus.INTERNAL_SERVER_ERROR,

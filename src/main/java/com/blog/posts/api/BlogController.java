@@ -15,32 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/api//blogs")
+@RequestMapping("/v1/api/blog")
 @Tag(name = "Blog Controller", description = "APIs for managing blog posts")
 public class BlogController {
-
   private final BlogService blogService;
-
-  @GetMapping("/api/protected/posts")
-  public String getProtectedPosts() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String username = authentication.getName(); // The subject of the JWT (e.g., 'user')
-    System.out.println("Authenticated user: " + username);
-    // If you need specific claims from the JWT
-    if (authentication.getPrincipal() instanceof Jwt jwt) {
-      String issuedBy = jwt.getIssuer().toString(); // The issuer (Auth Server)
-      String email = jwt.getClaimAsString("email"); // Example custom claim
-      System.out.println("Token issued by: " + issuedBy + ", User email: " + email);
-    }
-
-    return "This is a protected post list for " + username;
-  }
 
   @Autowired
   public BlogController(BlogService blogService) {
@@ -52,7 +34,8 @@ public class BlogController {
       responseCode = "200",
       description = "Successfully retrieved list of blogs",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<BlogDTO>> getAllBlogs() {
     List<BlogDTO> blogs = blogService.getAllBlogs();
     return ResponseEntity.ok(blogs);
@@ -80,10 +63,8 @@ public class BlogController {
       responseCode = "201",
       description = "Blog post created successfully",
       content = @Content(schema = @Schema(implementation = BlogDTO.class)))
-  @PostMapping(
-      path = "/p",
-      consumes = MediaType.APPLICATION_JSON_VALUE,
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(path = "/create")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<BlogDTO> createBlog(@Valid @RequestBody BlogDTO blogDTO) {
     BlogDTO createdBlog = blogService.createBlog(blogDTO);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdBlog);
@@ -102,6 +83,7 @@ public class BlogController {
       value = "/{id}",
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<BlogDTO> updateBlog(
       @Parameter(description = "ID of the blog post to be updated", required = true) @PathVariable
           Long id,
@@ -122,6 +104,7 @@ public class BlogController {
         @ApiResponse(responseCode = "404", description = "Blog post not found")
       })
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
   public ResponseEntity<Void> deleteBlog(
       @Parameter(description = "ID of the blog post to be deleted", required = true) @PathVariable
           Long id) {

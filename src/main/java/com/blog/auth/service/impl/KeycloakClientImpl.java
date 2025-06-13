@@ -8,14 +8,18 @@ import com.blog.auth.service.KeycloakClientIDP;
 import com.blog.sharedkernel.config.IDPConfigProperties;
 import com.blog.sharedkernel.exception.DuplicateUserException;
 import com.blog.sharedkernel.exception.KeyCloakException;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,13 +62,12 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
   }
 
   @Override
-  public CreateUserResponse createUser(CreateUserRequest createUserRequest) {
+  public CreateUserResponse createUser(CreateUserRequest createUserRequest, Set<String> userGroup) {
     log.info("KeycloakClientImpl createUser called");
-    try {
-      UserRepresentation userRepresentation =
-          getUserRepresentation(createUserRequest, false, true, true);
-      Response response =
-          keycloak.realm(idpConfigProperties.getRealm()).users().create(userRepresentation);
+    UserRepresentation userRepresentation =
+        getUserRepresentation(createUserRequest, false, true, true, Set.of());
+    try (Response response =
+        keycloak.realm(idpConfigProperties.getRealm()).users().create(userRepresentation)) {
       if (response.getStatus() != 201) {
         if (response.getStatus() == HttpStatus.CONFLICT.value()) {
           log.error("User already exists");
@@ -77,17 +80,19 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
               createUserRequest.getUsername(),
               HttpStatus.FORBIDDEN);
         } else {
-          log.error("Failed to create user in status: {}", response.getStatus());
-          log.error("Failed to create user in entity: {}", response.readEntity(String.class));
-          throw new RuntimeException("Failed to create user");
+          String errorMessage =
+              String.format(
+                  "Failed to create user in keycloak with status %s and entity is %s",
+                  response.getStatus(), response.readEntity(String.class));
+          log.error(errorMessage);
+          throw new RuntimeException(errorMessage);
         }
       }
-
       String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+      this.updateOrAssignRole(userId, Set.of(createUserRequest.getRole()));
       log.info("User created with ID: {}", userId);
       CreateUserResponse createUserResponse = userMapper.toCreateUserResponse(createUserRequest);
       createUserResponse.setKeycloakId(userId);
-      response.close();
       return createUserResponse;
     } catch (Exception e) {
       log.error("Exception while creating user: {}", e.getMessage());
@@ -97,11 +102,19 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
     }
   }
 
+  @Override
+  public void updateOrAssignRole(@Nonnull String userId, @Nonnull Set<String> roleName) {
+    List<RoleRepresentation> roleRepresentation = getRoles(roleName);
+    UserResource userResource = keycloak.realm(idpConfigProperties.getRealm()).users().get(userId);
+    userResource.roles().realmLevel().add(roleRepresentation);
+  }
+
   private UserRepresentation getUserRepresentation(
       CreateUserRequest createUserRequest,
       Boolean isTemporaryPassword,
       Boolean isEnabled,
-      Boolean isEmailVerified) {
+      Boolean isEmailVerified,
+      Set<String> userGroup) {
     UserRepresentation userRepresentation = new UserRepresentation();
     userRepresentation.setUsername(createUserRequest.getUsername());
     userRepresentation.setEmail(createUserRequest.getEmail());
@@ -109,14 +122,16 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
     userRepresentation.setLastName(createUserRequest.getLastName());
     userRepresentation.setEnabled(isEnabled);
     userRepresentation.setEmailVerified(isEmailVerified);
-
+    userRepresentation.setGroups(userGroup.stream().toList());
     userRepresentation.setCredentials(
         List.of(getCredentialRepresentation(createUserRequest.getPassword(), isTemporaryPassword)));
-
-    CredentialRepresentation credentialRepresentation =
-        getCredentialRepresentation(createUserRequest.getPassword(), isTemporaryPassword);
-    userRepresentation.setCredentials(List.of(credentialRepresentation));
     return userRepresentation;
+  }
+
+  private List<RoleRepresentation> getRoles(Set<String> roles) {
+    List<RoleRepresentation> list = keycloak.realm(idpConfigProperties.getRealm()).roles().list();
+    log.info("Roles: {}", list);
+    return list.stream().filter(r -> roles.contains(r.getName())).toList();
   }
 
   private CredentialRepresentation getCredentialRepresentation(
@@ -170,6 +185,20 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
       init();
     }
     return keycloak;
+  }
+
+  @Override
+  public void rollbackKeycloakUser(String username) {
+    try {
+      boolean deleted = this.deleteUser(username);
+      if (deleted) {
+        log.info("Successfully rolled back Keycloak user: {}", username);
+      } else {
+        log.warn("Failed to rollback Keycloak user: {}", username);
+      }
+    } catch (Exception ex) {
+      log.error("Error while rolling back Keycloak user: {}", username, ex);
+    }
   }
 
   @Override

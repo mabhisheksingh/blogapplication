@@ -9,6 +9,7 @@ import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.AdminService;
 import com.blog.sharedkernel.dto.PagingResult;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -40,38 +41,27 @@ public class AdminServiceImpl implements AdminService {
   @Transactional
   public CreateUserResponse createUser(CreateUserRequest request) {
     log.info("Creating new user with username: {}", request.getUsername());
-    log.debug(
-        "User creation request details - Email: {}, Roles: {}",
-        request.getEmail(),
-        request.getRoles());
+    log.debug("Request: Email={}, Roles={}", request.getEmail(), request.getRole());
+
+    CreateUserResponse response;
+    try {
+      response = keycloakClient.createUser(request, Set.of());
+      log.debug("Successfully created user in Keycloak");
+    } catch (Exception ex) {
+      log.error("Keycloak user creation failed: {}", ex.getMessage(), ex);
+      throw new RuntimeException("Failed to create user in identity provider", ex);
+    }
 
     try {
-      log.debug("Creating user in Keycloak");
-      CreateUserResponse response = keycloakClient.createUser(request);
-
-      try {
-        log.debug("Saving user to database");
-        User user = userMapper.toUser(request);
-        User savedUser = userRepository.save(user);
-        response.setUserId(savedUser.getId());
-
-        log.info(
-            "Successfully created user with ID: {} and username: {}",
-            savedUser.getId(),
-            savedUser.getUsername());
-        return response;
-
-      } catch (Exception e) {
-        log.error("Error saving user to database. Attempting to rollback Keycloak user", e);
-        boolean deleted = keycloakClient.deleteUser(response.getUsername());
-        log.debug("Keycloak user rollback status: {}", deleted ? "Success" : "Failed");
-        throw new RuntimeException("Failed to create user in database: " + e.getMessage(), e);
-      }
-
-    } catch (Exception e) {
-      log.error("Failed to create user in Keycloak: {}", e.getMessage(), e);
-      throw new RuntimeException(
-          "Failed to create user in identity provider: " + e.getMessage(), e);
+      User user = userMapper.toUser(request);
+      User savedUser = userRepository.save(user);
+      response.setUserId(savedUser.getId());
+      log.info("Successfully created user with ID: {}", savedUser.getId());
+      return response;
+    } catch (Exception ex) {
+      log.error("DB save failed, rolling back Keycloak user", ex);
+      keycloakClient.rollbackKeycloakUser(response.getUsername());
+      throw new RuntimeException("Failed to create user in database", ex);
     }
   }
 

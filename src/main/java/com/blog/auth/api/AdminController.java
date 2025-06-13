@@ -1,5 +1,6 @@
 package com.blog.auth.api;
 
+import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.service.AdminService;
 import com.blog.auth.service.UserService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +59,7 @@ public class AdminController {
         @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient privileges")
       })
   @GetMapping(value = "/users-without-page", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<CreateUserResponse>> getAllUsers() {
     log.info("Fetching all users without pagination");
     List<CreateUserResponse> users = adminService.getAllUser();
@@ -82,7 +84,7 @@ public class AdminController {
         @ApiResponse(responseCode = "403", description = "Forbidden - Insufficient privileges")
       })
   @GetMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<PagingResult<CreateUserResponse>> getUsersWithPagination(
       @Parameter(description = "Page number (0-based)", example = "0")
           @RequestParam(defaultValue = "0")
@@ -122,7 +124,7 @@ public class AdminController {
         @ApiResponse(responseCode = "404", description = "User not found")
       })
   @GetMapping(value = "/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<CreateUserResponse> getUserById(
       @Parameter(description = "ID of the user to be retrieved", required = true, example = "1")
           @PathVariable
@@ -144,7 +146,7 @@ public class AdminController {
         @ApiResponse(responseCode = "404", description = "User not found")
       })
   @DeleteMapping("/users/{userName}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('ROOT')")
   public ResponseEntity<Void> deleteUser(
       @Parameter(
               description = "Username of the user to be deleted",
@@ -155,6 +157,14 @@ public class AdminController {
     log.info("Attempting to delete user with username: {}", userName);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<Void>build();
   }
+
+  @PostMapping("/create-user")
+  @Operation(summary = "Create user info")
+  public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
+    createUserRequest.setRole("ADMIN");
+    return ResponseEntity.ok(userService.createUser(createUserRequest));
+  }
+
   //  @PutMapping("/users/{id}/role")
   //  @PreAuthorize("hasRole('ADMIN')")
   //  public ResponseEntity<CreateUserResponse> updateUserRole(

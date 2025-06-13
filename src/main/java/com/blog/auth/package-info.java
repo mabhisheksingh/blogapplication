@@ -6,7 +6,8 @@
       "sharedkernel::sharedkernel.dto",
       "sharedkernel::sharedkernel.entity",
       "sharedkernel::sharedkernel.mapper",
-      "sharedkernel::sharedkernel.config"
+      "sharedkernel::sharedkernel.config",
+      "sharedkernel::sharedkernel.utils"
     })
 package com.blog.auth;
 

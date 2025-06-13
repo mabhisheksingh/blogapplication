@@ -35,19 +35,16 @@ public class SecurityConfig {
             authorize ->
                 authorize
                     // Publicly accessible endpoints (no authentication required)
-                    .requestMatchers("/blogs1/**")
+                    .requestMatchers("/v1/api/public/**")
                     .permitAll() // Example: allow anyone to view posts
                     .requestMatchers("/api/comments", "/api/comments/{id}")
                     .permitAll() // Example: allow anyone to view comments
                     .requestMatchers("/public/**", "/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll() // Common public paths
                     // Endpoints requiring specific roles or authentication
-                    .requestMatchers("/api/admin/**")
-                    .hasRole("ADMIN") // Only ADMIN role can access admin endpoints
-                    .requestMatchers("/api/users/me")
-                    .authenticated() // User profile endpoint requires authentication
-                    .requestMatchers("/api/comments")
-                    .hasRole("USER") // Only authenticated USERs can create comments
+                    .requestMatchers("/v1/api/admin/**")
+                    .hasAnyRole(
+                        "ADMIN", "ROOT") // Only ADMIN and ROOT role can access admin endpoints
                     .anyRequest()
                     .authenticated() // All other requests require authentication
             )

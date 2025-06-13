@@ -32,6 +32,10 @@ com.blog
 
 | Version | Date       | Description                                                                 |
 |---------|------------|-----------------------------------------------------------------------------|
+| v1.2.0  | 2025-06-14 | Enhanced role-based access control and user management                    |
+|         |            | - Added role-based access control for blog endpoints                       |
+|         |            | - Implemented PublicController for user self-registration                  |
+|         |            | - Improved error handling and validation in user management                |
 | v1.1.1  | 2025-06-12 | Bug fixes and documentation updates                                        |
 |         |            | - Updated README with latest version information                           |
 |         |            | - Fixed minor issues in global exception handling                          |
@@ -48,13 +52,15 @@ com.blog
 ## Key Features
 
 - **Modular Architecture**: Built with Spring Modulith for clear module boundaries
+- **Role-Based Access Control**: Fine-grained access control with USER and ADMIN roles
 - **User Management**: Complete user CRUD operations with role-based access control
+- **Self-Registration**: Public endpoint for user registration with USER role
 - **Admin Dashboard**: Dedicated admin interface for user management
 - **Keycloak Integration**: Seamless authentication and authorization with Keycloak
 - **JWT Authentication**: Secure API endpoints with JWT tokens
 - **RESTful API**: Clean, resource-oriented API design
-- **OpenAPI Documentation**: Auto-generated API documentation
-- **Exception Handling**: Consistent error responses with proper HTTP status codes
+- **OpenAPI Documentation**: Auto-generated API documentation with Swagger UI
+- **Comprehensive Exception Handling**: Consistent error responses with proper HTTP status codes
 
 ## Prerequisites
 
@@ -98,6 +104,26 @@ com.blog
    mvn spring-boot:run
    ```
    The application will start on port `9001`.
+
+## API Endpoints
+
+### Authentication
+- `POST /v1/api/public/create-user` - Register a new user (self-registration)
+  - Requires: User details in request body
+  - Returns: Created user details
+
+### Admin Endpoints (Requires ADMIN role)
+- `POST /v1/api/admin/create-user` - Create a new user with ADMIN role
+- `GET /v1/api/admin/users` - List all users
+- `GET /v1/api/admin/users/{id}` - Get user by ID
+- `PUT /v1/api/admin/users/{id}` - Update user
+- `DELETE /v1/api/admin/users/{id}` - Delete user
+
+### Blog Endpoints
+- `GET /v1/api/blog` - Get all blog posts (Requires USER role)
+- `POST /v1/api/blog/create` - Create a new blog post (Requires USER role)
+- `PUT /v1/api/blog/{id}` - Update a blog post (Requires USER role)
+- `DELETE /v1/api/blog/{id}` - Delete a blog post (Requires ADMIN or USER role)
 
 5. **Access the Application**
    - Application URL: http://localhost:9001

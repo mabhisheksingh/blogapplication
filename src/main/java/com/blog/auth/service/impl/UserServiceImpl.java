@@ -8,10 +8,14 @@ import com.blog.auth.model.User;
 import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.UserService;
 import com.blog.sharedkernel.exception.UserNotFoundException;
+import com.blog.sharedkernel.utils.UserUtils;
+import jakarta.annotation.Nonnull;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -20,20 +24,26 @@ public class UserServiceImpl implements UserService {
   UserRepository userRepository;
   KeycloakClientImpl keycloakClient;
   UserMapper userMapper;
+  UserUtils userUtils;
 
   @Autowired
   public UserServiceImpl(
-      UserRepository userRepository, KeycloakClientImpl keycloakClient, UserMapper userMapper) {
+      UserRepository userRepository,
+      KeycloakClientImpl keycloakClient,
+      UserMapper userMapper,
+      UserUtils userUtils) {
+    this.userUtils = userUtils;
     this.userMapper = userMapper;
     this.keycloakClient = keycloakClient;
     this.userRepository = userRepository;
   }
 
   @Override
-  public CreateUserResponse createUser(CreateUserRequest request) {
+  @Transactional
+  public CreateUserResponse createUser(@Nonnull CreateUserRequest request) {
     log.info("UserServiceImpl createUser called");
     log.info("UserServiceImpl createUser request: {}", request);
-    CreateUserResponse response = keycloakClient.createUser(request);
+    CreateUserResponse response = keycloakClient.createUser(request, Set.of());
     try {
       User save = userRepository.save(userMapper.toUser(request));
       response.setUserId(save.getId());
