@@ -646,7 +646,7 @@
       "oidc.ciba.grant.enabled" : "false",
       "backchannel.logout.session.required" : "true",
       "login_theme" : "keycloak.v2",
-      "post.logout.redirect.uris" : "http://localhost:4200/",
+      "post.logout.redirect.uris" : "http://localhost:4200",
       "display.on.consent.screen" : "false",
       "oauth2.device.authorization.grant.enabled" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false"
