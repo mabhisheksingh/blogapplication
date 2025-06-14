@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Container, Form, Alert, Spinner, Tab, Tabs } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import { authAPI, postsAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext.jsx';
+import { exportedAPI as authAPI, postsAPI } from '../services/api';
 
 const Profile = () => {
   const { currentUser, updateUser } = useAuth();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
-import { authAPI } from '../services/api';
+import { exportedAPI as authAPI } from '../services/api';
 import { Row, Col } from 'react-bootstrap';
 
 

@@ -1,23 +1,28 @@
 import React from 'react';
-import {  Button, Container } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useKeycloak } from '@react-keycloak/web';
 
 const Home = () => {
+  const { keycloak } = useKeycloak();
+
   return (
     <div>
       <Container className="text-center bg-light p-5 rounded">
         <h1>Welcome to Blog Application</h1>
-        <p>
+        <p className="lead">
           A modern blog platform built with React and Spring Boot
         </p>
-        <p>
-          <Button as={Link} to="/posts" variant="primary" className="me-2">
-            View Posts
+        <div className="mt-4">
+          <Button as={Link} to="/posts" variant="primary" className="me-3">
+            View All Posts
           </Button>
-          <Button as={Link} to="/register" variant="outline-primary">
-            Sign Up
-          </Button>
-        </p>
+          {keycloak.authenticated && (
+            <Button as={Link} to="/posts/new" variant="success">
+              Create New Post
+            </Button>
+          )}
+        </div>
       </Container>
       
       <Container className="mt-5">
@@ -31,8 +36,8 @@ const Home = () => {
             <p>Built with React, Spring Boot, and other modern technologies.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <h3>Responsive Design</h3>
-            <p>Works perfectly on all devices, from mobile to desktop.</p>
+            <h3>Secure Authentication</h3>
+            <p>Powered by Keycloak for secure and reliable user authentication.</p>
           </div>
         </div>
       </Container>

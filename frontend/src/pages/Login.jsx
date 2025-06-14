@@ -1,11 +1,15 @@
 import { useEffect } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
-import keycloak from '../keycloak';
+import { useKeycloak } from '@react-keycloak/web';
 
 const Login = () => {
+  const { keycloak } = useKeycloak();
+
   useEffect(() => {
-    keycloak.login();
-  }, []);
+    if (keycloak && !keycloak.authenticated) {
+      keycloak.login();
+    }
+  }, [keycloak]);
 
   return (
     <Container className="mt-5 text-center">
