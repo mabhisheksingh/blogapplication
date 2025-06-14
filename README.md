@@ -1,196 +1,119 @@
-# Blog Application (DDD Architecture with Spring Modulith)
+# Blog Application
 
-A modern blog application built with Spring Boot 3.5.0, Spring Modulith, and Domain-Driven Design principles.
+A full-stack blog application with React frontend and Spring Boot backend.
 
 ## Project Structure
 
-The project follows a modular architecture using Spring Modulith with the following modules:
-
 ```
-com.blog
-├── BlogApplication.java          # Main application class
-│
-├── sharedkernel/                # Shared kernel module (common components)
-│   └── exception/               # Shared exceptions and base classes
-│
-├── posts/                      # Posts module
-│   ├── api/                     # REST controllers
-│   ├── dto/                     # Data Transfer Objects
-│   ├── model/                   # Domain model
-│   ├── repository/              # Data access
-│   ├── service/                 # Business logic
-│   └── mapper/                  # Object mapping
-│
-├── auth/                       # Authentication module
-│   └── config/                  # Security configuration
-│
-├── comments/                   # Comments module (future)
-└── search/                     # Search module (future)
+blogapplication/
+├── backend/              # Spring Boot backend
+│   ├── src/              # Source code
+│   ├── pom.xml           # Maven configuration
+│   └── mvnw              # Maven wrapper
+└── frontend/             # React frontend
+    ├── public/           # Static files
+    ├── src/              # React source code
+    │   ├── components/   # Reusable components
+    │   ├── pages/        # Page components
+    │   ├── services/     # API services
+    │   ├── utils/        # Utility functions
+    │   ├── App.js        # Main App component
+    │   └── index.js      # Entry point
+    ├── package.json      # NPM dependencies
+    └── README.md         # Frontend documentation
 ```
-
-## Version History
-
-| Version | Date       | Description                                                                 |
-|---------|------------|-----------------------------------------------------------------------------|
-| v1.2.0  | 2025-06-14 | Enhanced role-based access control and user management                    |
-|         |            | - Added role-based access control for blog endpoints                       |
-|         |            | - Implemented PublicController for user self-registration                  |
-|         |            | - Improved error handling and validation in user management                |
-| v1.1.1  | 2025-06-12 | Bug fixes and documentation updates                                        |
-|         |            | - Updated README with latest version information                           |
-|         |            | - Fixed minor issues in global exception handling                          |
-| v1.1.0  | 2025-06-12 | Enhanced authentication and admin features                                  |
-|         |            | - Added admin and user management controllers                               |
-|         |            | - Implemented user CRUD operations with Keycloak integration               |
-|         |            | - Added exception handling for user management                              |
-|         |            | - Improved configuration management with IDP settings                       |
-| v1.0.0  | 2025-06-10 | Initial stable release with Spring Modulith integration and basic blog features |
-|         |            | - Modular architecture with posts, auth, and sharedkernel modules           |
-|         |            | - JWT authentication support                                                |
-|         |            | - Basic CRUD operations for blog posts                                      |
-
-## Key Features
-
-- **Modular Architecture**: Built with Spring Modulith for clear module boundaries
-- **Role-Based Access Control**: Fine-grained access control with USER and ADMIN roles
-- **User Management**: Complete user CRUD operations with role-based access control
-- **Self-Registration**: Public endpoint for user registration with USER role
-- **Admin Dashboard**: Dedicated admin interface for user management
-- **Keycloak Integration**: Seamless authentication and authorization with Keycloak
-- **JWT Authentication**: Secure API endpoints with JWT tokens
-- **RESTful API**: Clean, resource-oriented API design
-- **OpenAPI Documentation**: Auto-generated API documentation with Swagger UI
-- **Comprehensive Exception Handling**: Consistent error responses with proper HTTP status codes
 
 ## Prerequisites
 
 - Java 17 or higher
-- Maven 3.6.3 or higher
-- PostgreSQL 14+
-- Keycloak 21+ (for authentication)
+- Node.js 16.x or higher
+- npm 8.x or higher
+- MySQL 8.0 or higher (or your preferred database)
 
-## Getting Started
+## Backend Setup
 
-1. **Clone the repository**
+1. Navigate to the backend directory:
    ```bash
-   git clone <repository-url>
-   cd blog-application
+   cd backend
    ```
 
-2. **Database Setup**
-   The application uses PostgreSQL. Update the following in `application.yml` if needed:
-   ```yaml
-   spring:
-     datasource:
-       url: jdbc:postgresql://localhost:5432/postgres
-       username: postgres
-       password: postgres
-   ```
+2. Configure your database in `src/main/resources/application.properties`
 
-3. **Keycloak Configuration**
-   The application is pre-configured to work with a Keycloak server running at `http://localhost:9003` with the following settings:
-   - Realm: `fusion-master`
-   - Client ID: `blog-auth-private`
-   - Client Secret: `k94Hna2SQdRmEhgQqedOBh0LqvMxpFH7`
-   
-   Make sure your Keycloak server is running and the realm is properly configured before starting the application.
-
-4. **Build and Run**
+3. Build and run the application:
    ```bash
-   # Build the application
-   mvn clean install
-   
-   # Run the application
-   mvn spring-boot:run
+   ./mvnw spring-boot:run
    ```
-   The application will start on port `9001`.
 
-## API Endpoints
+   The backend will be available at `http://localhost:8080`
 
-### Authentication
-- `POST /v1/api/public/create-user` - Register a new user (self-registration)
-  - Requires: User details in request body
-  - Returns: Created user details
+## Frontend Setup
 
-### Admin Endpoints (Requires ADMIN role)
-- `POST /v1/api/admin/create-user` - Create a new user with ADMIN role
-- `GET /v1/api/admin/users` - List all users
-- `GET /v1/api/admin/users/{id}` - Get user by ID
-- `PUT /v1/api/admin/users/{id}` - Update user
-- `DELETE /v1/api/admin/users/{id}` - Delete user
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
 
-### Blog Endpoints
-- `GET /v1/api/blog` - Get all blog posts (Requires USER role)
-- `POST /v1/api/blog/create` - Create a new blog post (Requires USER role)
-- `PUT /v1/api/blog/{id}` - Update a blog post (Requires USER role)
-- `DELETE /v1/api/blog/{id}` - Delete a blog post (Requires ADMIN or USER role)
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-5. **Access the Application**
-   - Application URL: http://localhost:9001
-   - API Documentation: http://localhost:9001/swagger-ui.html
-   - OpenAPI Specification: http://localhost:9001/v3/api-docs
-   - Keycloak Admin Console: http://localhost:9003/admin
+3. Start the development server:
+   ```bash
+   npm start
+   ```
 
-## Development
+   The frontend will be available at `http://localhost:3000`
 
-### Database
-- Hibernate is configured with `ddl-auto: create-drop` for development
-- SQL logging is enabled with formatted output
-- Uses PostgreSQL dialect
+## Available Scripts
 
-### Logging
-- Spring Framework: DEBUG
-- Hibernate SQL: DEBUG
-- SQL parameter binding: TRACE
+In the frontend directory, you can run:
 
-### Development Tools
-- Spring DevTools enabled for automatic application restart
-- Docker Compose lifecycle management enabled
+- `npm start` - Runs the app in development mode
+- `npm test` - Launches the test runner
+- `npm run build` - Builds the app for production
+- `npm run eject` - Ejects from create-react-app
 
-## Development
+## Features
 
-### Code Style
+- User authentication (login/register)
+- Create, read, update, and delete blog posts
+- Comment on posts
+- Responsive design
+- Modern UI with React Bootstrap
 
-This project uses Google Java Format. To format your code:
+## API Documentation
+
+The API documentation is available at `http://localhost:8080/swagger-ui.html` when the backend is running.
+
+## Deployment
+
+### Backend
+
+The backend can be deployed as a standard Spring Boot application. You can build a JAR file with:
 
 ```bash
-mvn spotless:apply
+./mvnw clean package
+java -jar target/your-app-name.jar
 ```
 
-### Testing
+### Frontend
 
-Run tests with:
+To create a production build of the frontend:
 
 ```bash
-mvn test
+npm run build
 ```
 
-## Architecture
-
-### Domain Layer
-- Contains the core business logic and rules
-- Includes entities, value objects, and domain services
-- No dependencies on other layers
-
-### Application Layer
-- Orchestrates the flow of data between the domain and infrastructure layers
-- Implements use cases
-- Defines DTOs for data transfer
-
-### Infrastructure Layer
-- Handles technical concerns like:
-  - Persistence (JPA repositories)
-  - Web (REST controllers)
-  - Security
-  - External services
+This will create a `build` directory with production-ready static files that can be served by any web server.
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
