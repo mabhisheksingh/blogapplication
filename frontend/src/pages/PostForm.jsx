@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
-import { useApi } from '../services/api';
+import { postsAPI } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -9,7 +9,7 @@ const PostForm = ({ isEditMode = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { keycloak, initialized } = useKeycloak();
-  const { postsAPI } = useApi();
+  const { postsAPI } = postsAPI();
   const { currentUser } = useAuth();
   
   const [formData, setFormData] = useState({

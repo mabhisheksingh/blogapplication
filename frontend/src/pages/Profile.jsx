@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Card, Container, Form, Alert, Spinner, Tab, Tabs } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext.jsx';
-import { useApi } from '../services/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Button, Container, Row, Col, Spinner, Alert, Tab, Tabs, Form } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { postsAPI, setupInterceptors, authAPI } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Profile = () => {
   const { currentUser, updateUser } = useAuth();
   const { keycloak, initialized } = useKeycloak();
-  const { postsAPI, authAPI } = useApi();
-  
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     name: '',
@@ -21,8 +20,49 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const navigate = useNavigate();
+
+  // Set up API interceptors when component mounts
+  useEffect(() => {
+    if (!initialized) return;
+    
+    // Set up API interceptors with keycloak
+    const cleanup = setupInterceptors(keycloak);
+    
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [keycloak, initialized]);
+
+  // Memoize the fetch function to prevent recreation on each render
+  const fetchUserPosts = useCallback(async () => {
+    if (!keycloak.authenticated || !keycloak.tokenParsed?.sub) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use the postsAPI directly - the interceptor will handle the token
+      const response = await postsAPI.getAllPosts({ authorId: keycloak.tokenParsed.sub });
+      setUserPosts(Array.isArray(response?.data) ? response.data : []);
+      
+    } catch (err) {
+      console.error('Error fetching user posts:', err);
+      
+      // If we get 401, the interceptor should handle token refresh
+      // If we still get here, it means refresh failed and we should redirect to login
+      if (err.response?.status === 401) {
+        keycloak.login();
+        return;
+      }
+      
+      setError('Failed to fetch your posts. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser, keycloak, postsAPI]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -42,40 +82,9 @@ const Profile = () => {
         // Don't reset passwords to avoid losing input
       }));
       
-      // Fetch user's posts
-      const fetchUserPosts = async () => {
-        try {
-          setLoading(true);
-          setError('');
-          
-          const response = await postsAPI.getAllPosts({ authorId: currentUser.id });
-          setUserPosts(response.data || []);
-        } catch (err) {
-          console.error('Error fetching user posts:', err);
-          setError('Failed to load your posts');
-          
-          // If unauthorized, try to refresh token
-          if (err.response?.status === 401) {
-            try {
-              await keycloak.updateToken(30);
-              // Retry the request
-              const retryResponse = await postsAPI.getAllPosts({ authorId: currentUser.id });
-              setUserPosts(retryResponse.data || []);
-              return;
-            } catch (refreshError) {
-              console.error('Token refresh failed:', refreshError);
-              keycloak.login();
-              return;
-            }
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-      
       fetchUserPosts();
     }
-  }, [currentUser, initialized, keycloak, postsAPI]);
+  }, [currentUser, initialized, keycloak, fetchUserPosts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Container, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import { useApi } from '../services/api';
+import { postsAPI } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 
 const PostDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { keycloak, initialized } = useKeycloak();
-  const { postsAPI, commentsAPI } = useApi();
+  const { postsAPI, commentsAPI } = postsAPI();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);

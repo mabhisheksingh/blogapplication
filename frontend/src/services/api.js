@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useKeycloak } from '@react-keycloak/web';
 
 // Determine API base URL – strip any trailing /api to avoid double paths like /api/v1/api
 const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9001/api';
@@ -12,92 +11,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-// Create a wrapper function to get the API instance with interceptors
-export const getApi = () => {
-  const { keycloak, initialized } = useKeycloak();
-  
-  // Add request interceptor to add auth token to requests
-  api.interceptors.request.use(
-    async (config) => {
-      // Skip auth header for public endpoints
-      const isPublic = config.url?.startsWith('/v1/api/public/') || 
-                      config.url?.startsWith('/api/public/') ||
-                      config.url?.includes('keycloak');
-      
-      if (isPublic) return config;
-
-      // Ensure keycloak is initialized and authenticated
-      if (initialized && keycloak?.authenticated) {
-        try {
-          // Force token update if it's about to expire (within 5 minutes)
-          await keycloak.updateToken(300);
-          
-          // Set the Authorization header
-          config.headers.Authorization = `Bearer ${keycloak.token}`;
-        } catch (error) {
-          console.error('Failed to refresh token:', error);
-          keycloak.login();
-          return Promise.reject('Failed to refresh token');
-        }
-      }
-      
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
-  // Add response interceptor to handle retries and 401 errors
-  api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-      
-      // If we get a 401, try to refresh the token
-      if (error.response?.status === 401) {
-        try {
-          if (keycloak) {
-            await keycloak.updateToken();
-            // Retry the original request
-            originalRequest.headers.Authorization = `Bearer ${keycloak.token}`;
-            return api(originalRequest);
-          }
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
-          keycloak.login();
-          return Promise.reject(refreshError);
-        }
-      }
-
-      // Handle other errors with retry logic
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
-        originalRequest._retryCount = originalRequest._retryCount || 0;
-      }
-
-      // Only retry on network errors or 5xx server errors (except 501)
-      const isNetworkError = !error.response;
-      const isServerError = error.response && error.response.status >= 500 && error.response.status !== 501;
-      const shouldRetry = (isNetworkError || isServerError) && originalRequest._retryCount < 5;
-
-      if (shouldRetry) {
-        originalRequest._retryCount += 1;
-        console.log(`Retry attempt ${originalRequest._retryCount} for ${originalRequest.url}`);
-        
-        // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-        const delay = Math.min(1000 * Math.pow(2, originalRequest._retryCount - 1), 30000);
-        
-        return new Promise(resolve => {
-          setTimeout(() => resolve(api(originalRequest)), delay);
-        });
-      }
-
-      return Promise.reject(error);
-    }
-  );
-
-  return api;
-};
 
 // Create a function to generate API methods with the current API instance
 const createApiMethods = (api) => ({
@@ -152,28 +65,86 @@ const createApiMethods = (api) => ({
       return keycloak.login(options);
     },
     // Public user registration
-    register: (data) => api.post('/v1/api/public/create-user', data),
     // Fetch current user details
     getCurrentUser: () => api.get('/v1/api/user/me')
   }
 });
 
-// Create a custom hook to use the API
-const useApi = () => {
-  const api = getApi();
-  return createApiMethods(api);
-};
+// Create API methods with the default API instance
+const { usersAPI, postsAPI, commentsAPI, authAPI } = createApiMethods(api);
 
-// For backward compatibility, create default exports
-const defaultApi = createApiMethods(api);
-const { usersAPI, postsAPI, commentsAPI, authAPI } = defaultApi;
+// Export individual APIs
+export { usersAPI, postsAPI, commentsAPI, authAPI };
 
-// Export everything needed
-export const exportedAPI = {
+// For backward compatibility
+export default {
   ...usersAPI,
   ...commentsAPI,
   authAPI
 };
 
-export { usersAPI, postsAPI, commentsAPI, authAPI, useApi };
-export default exportedAPI;
+// Create a function to set up interceptors with keycloak
+export const setupInterceptors = (keycloak) => {
+  // Clear any existing interceptors
+  api.interceptors.request.eject();
+  
+  // Add request interceptor
+  const requestInterceptor = api.interceptors.request.use(
+    async (config) => {
+      // Skip auth header for public endpoints
+      const isPublic = config.url?.startsWith('/v1/api/public/') || 
+                      config.url?.startsWith('/api/public/') ||
+                      config.url?.includes('keycloak');
+      
+      if (isPublic || !keycloak?.authenticated) return config;
+
+      try {
+        // Get a fresh token if needed
+        await keycloak.updateToken(30);
+        config.headers.Authorization = `Bearer ${keycloak.token}`;
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        keycloak.login();
+        return Promise.reject('Failed to refresh token');
+      }
+      
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // Add response interceptor
+  const responseInterceptor = api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      
+      // If we get a 401, try to refresh the token
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          await keycloak.updateToken(30);
+          originalRequest.headers.Authorization = `Bearer ${keycloak.token}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          keycloak.login();
+          return Promise.reject(refreshError);
+        }
+      }
+      
+      return Promise.reject(error);
+    }
+  );
+
+  // Return cleanup function
+  return () => {
+    api.interceptors.request.eject(requestInterceptor);
+    api.interceptors.response.eject(responseInterceptor);
+  };
+};
+
+// Export individual APIs
+
+

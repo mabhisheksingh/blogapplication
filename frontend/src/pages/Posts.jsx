@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Container, Row, Col, Spinner } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { useApi } from '../services/api';
+import { Card, Button, Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { postsAPI, setupInterceptors } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 
 const Posts = () => {
   const { keycloak, initialized } = useKeycloak();
-  const { postsAPI } = useApi();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,26 +14,41 @@ const Posts = () => {
   useEffect(() => {
     if (!initialized) return;
 
-    const fetchPosts = async () => {
-      if (!keycloak.authenticated) {
-        setLoading(false);
-        return;
-      }
+    // Set up API interceptors with keycloak
+    const cleanup = setupInterceptors(keycloak);
 
+    const fetchPosts = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        // Make the API call - the interceptor will handle the token
         const response = await postsAPI.getAllPosts();
-        setPosts(response.data);
+        setPosts(Array.isArray(response?.data) ? response.data : []);
+        
       } catch (err) {
-        setError('Failed to fetch posts. Please try again later.');
         console.error('Error fetching posts:', err);
+        
+        if (err.response?.status === 401) {
+          // If we get 401, the interceptor should handle token refresh
+          // If we still get here, it means refresh failed and we should redirect to login
+          keycloak.login();
+          return;
+        }
+        
+        setError('Failed to fetch posts. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchPosts();
-  }, [initialized, keycloak.authenticated, postsAPI]);
+
+    // Clean up interceptors when component unmounts
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [initialized, keycloak]);
 
   if (loading) {
     return (
