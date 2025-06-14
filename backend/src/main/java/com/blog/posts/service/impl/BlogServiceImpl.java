@@ -8,10 +8,13 @@ import com.blog.posts.service.BlogService;
 import com.blog.sharedkernel.exception.BlogNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class BlogServiceImpl implements BlogService {
   private final BlogRepository blogRepository;
   private final BlogMapper blogMapper;
@@ -24,7 +27,9 @@ public class BlogServiceImpl implements BlogService {
 
   @Override
   public List<BlogDTO> getAllBlogs() {
+    log.info("Fetching all blogs");
     List<Blog> blogs = blogRepository.findAll();
+    log.info("Fetched {} blogs", blogs.size());
     return blogs.stream().map(blogMapper::toDto).collect(Collectors.toList());
   }
 

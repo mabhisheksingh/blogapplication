@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/api/blog")
 @Tag(name = "Blog Controller", description = "APIs for managing blog posts")
+@Slf4j
 public class BlogController {
   private final BlogService blogService;
 
@@ -35,8 +37,9 @@ public class BlogController {
       description = "Successfully retrieved list of blogs",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
   @GetMapping
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
+  // @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<BlogDTO>> getAllBlogs() {
+    log.info("Fetching all blogs");
     List<BlogDTO> blogs = blogService.getAllBlogs();
     return ResponseEntity.ok(blogs);
   }

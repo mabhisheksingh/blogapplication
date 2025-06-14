@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
             authorize ->
                 authorize
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow OPTIONS for CORS
                     // Publicly accessible endpoints (no authentication required)
                     .requestMatchers("/v1/api/public/**")
                     .permitAll() // Example: allow anyone to view posts
@@ -58,6 +60,7 @@ public class SecurityConfig {
 
     // Disable CSRF for API-only applications (common for REST APIs with token-based auth)
     http.csrf(AbstractHttpConfigurer::disable);
+    http.cors(cors -> cors.disable());
 
     return http.build();
   }
