@@ -10,7 +10,6 @@ import PostDetail from './pages/PostDetail';
 import PostForm from './pages/PostForm';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
-import {useKeycloak} from '@react-keycloak/web'
 
 // Protected Route Component
 const PrivateRoute = ({ children, requiredRoles = [] }) => {
@@ -18,8 +17,8 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
 
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <div className="spinner-border" role="status">
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
+        <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -27,20 +26,36 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
   }
 
   if (!currentUser) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/" state={{ from: window.location.pathname }} replace />;
   }
 
   if (requiredRoles.length > 0 && !requiredRoles.some(role => currentUser.roles?.includes(role))) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-warning">
+          <h4>Access Denied</h4>
+          <p>You don't have permission to access this page.</p>
+        </div>
+      </div>
+    );
   }
 
   return children;
 };
-const { keycloak,initialized } = useKeycloak();
-console.log(keycloak);
-console.log(initialized);
 
 function App() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Navigation />
@@ -49,8 +64,22 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/posts" element={<Posts />} />
           <Route path="/posts/:id" element={<PostDetail />} />
-          
-          {/* Protected Routes */}
+          <Route
+            path="/posts/new"
+            element={
+              <PrivateRoute>
+                <PostForm />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/posts/:id/edit"
+            element={
+              <PrivateRoute>
+                <PostForm />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/profile"
             element={
@@ -59,23 +88,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route
-            path="/posts/new"
-            element={
-              <PrivateRoute requiredRoles={['USER', 'ADMIN','ROOT']}>
-                <PostForm />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/posts/:id/edit"
-            element={
-              <PrivateRoute requiredRoles={['USER', 'ADMIN','ROOT']}>
-                <PostForm isEditMode={true} />
-              </PrivateRoute>
-            }
-          />
-          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Container>
