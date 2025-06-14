@@ -1,8 +1,8 @@
 import axios from 'axios';
-import keycloak from '../keycloak';
+import { useKeycloak } from '@react-keycloak/web';
 
 // Determine API base URL – strip any trailing /api to avoid double paths like /api/v1/api
-const rawBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:9001/api';
+const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:9001/api';
 const API_URL = rawBaseUrl.replace(/\/api$/i, '');
 
 const api = axios.create({
@@ -12,39 +12,48 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token to requests
-api.interceptors.request.use(
-  async (config) => {
-    // Skip auth header for public endpoints if desired
-    const isPublic = config.url?.startsWith('/v1/api/public/') || config.url?.startsWith('/api/public/');
-    if (isPublic) return config;
+// Create a function that can be used in components to get the API instance with the latest token
+const createApiInstance = (keycloak) => {
+  // Add request interceptor to add auth token to requests
+  api.interceptors.request.use(
+    async (config) => {
+      // Skip auth header for public endpoints if desired
+      const isPublic = config.url?.startsWith('/v1/api/public/') || config.url?.startsWith('/api/public/');
+      if (isPublic) return config;
 
-    if (keycloak?.token) {
-      try {
-        // Refresh token if it's about to expire in the next 30 seconds
-        await keycloak.updateToken(30);
-      } catch (err) {
-        console.warn('Token refresh failed, forcing login');
-        return keycloak.login();
+      if (keycloak?.token) {
+        try {
+          // Refresh token if it's about to expire in the next 30 seconds
+          await keycloak.updateToken(30);
+          config.headers.Authorization = `Bearer ${keycloak.token}`;
+        } catch (err) {
+          console.warn('Token refresh failed, forcing login');
+          keycloak.login();
+          return Promise.reject('Token refresh failed');
+        }
       }
-      config.headers.Authorization = `Bearer ${keycloak.token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
 
-// Response interceptor to handle errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Keycloak should refresh tokens automatically, but if refresh fails redirect to login
-      keycloak.logout({ redirectUri: window.location.origin });
+  // Response interceptor to handle errors
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Keycloak should refresh tokens automatically, but if refresh fails redirect to login
+        keycloak.login();
+      }
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
-);
+  );
+
+  return api;
+};
+
+export { createApiInstance };
+
 
 // USER APIs
 export const usersAPI = {
@@ -89,11 +98,8 @@ export const commentsAPI = {
   getCommentCount: (postId) => api.get(`/api/comments/post/${postId}/count`),
 };
 
-// Optionally export default instance
-export default api;
-
-// Legacy compatibility exports for existing components expecting authAPI
-export const authAPI = {
+// Export the API instance and other utilities
+const authAPI = {
   // Initiate Keycloak login, returns a promise that resolves after redirect
   login: (options) => {
     // Keycloak login triggers redirect; return promise for interface compatibility
@@ -101,6 +107,16 @@ export const authAPI = {
   },
   // Public user registration maps to new public create-user endpoint
   register: usersAPI.createUserPublic,
-  // Fetch current user details – requires you to know user ID; alternatively hit a dedicated endpoint if available
-  getCurrentUser: () => api.get('/v1/api/user/me'), // adjust backend if different
+  // Fetch current user details
+  getCurrentUser: () => api.get('/v1/api/user/me')
 };
+
+// Export everything needed
+export const exportedAPI = {
+  ...usersAPI,
+  ...commentsAPI,
+  authAPI,
+  createApiInstance
+};
+
+export default exportedAPI;

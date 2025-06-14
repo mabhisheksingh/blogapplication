@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
-import { Navbar, Nav, Container, NavDropdown, Image, Badge } from 'react-bootstrap';
+import { Navbar, Nav, Container, NavDropdown, Image, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useKeycloak } from '@react-keycloak/web';
 
 const Navigation = () => {
-  const { currentUser, isAuthenticated, logout } = useAuth();
+  const { keycloak } = useKeycloak();
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    keycloak.logout({ redirectUri: window.location.origin });
     setExpanded(false);
   };
 
+  const handleLogin = () => {
+    keycloak.login();
+  };
+
   const closeNav = () => setExpanded(false);
+
+  // Get user's first name from token or email
+  const getUserName = () => {
+    if (!keycloak.authenticated || !keycloak.tokenParsed) return 'User';
+    return keycloak.tokenParsed.given_name || 
+           keycloak.tokenParsed.preferred_username?.split('@')[0] || 
+           'User';
+  };
 
   return (
     <Navbar 
@@ -40,7 +51,7 @@ const Navigation = () => {
             <LinkContainer to="/posts" onClick={closeNav}>
               <Nav.Link>Posts</Nav.Link>
             </LinkContainer>
-            {isAuthenticated && (
+            {keycloak.authenticated && (
               <LinkContainer to="/posts/new" onClick={closeNav}>
                 <Nav.Link>New Post</Nav.Link>
               </LinkContainer>
@@ -48,28 +59,15 @@ const Navigation = () => {
           </Nav>
           
           <Nav>
-            {isAuthenticated ? (
+            {keycloak.authenticated ? (
               <NavDropdown
                 title={
                   <div className="d-inline-flex align-items-center">
-                    {currentUser?.avatarUrl ? (
-                      <Image
-                        src={currentUser.avatarUrl}
-                        roundedCircle
-                        width="32"
-                        height="32"
-                        className="me-2"
-                        alt={currentUser.name}
-                      />
-                    ) : (
-                      <div 
-                        className="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle me-2"
-                        style={{ width: '32px', height: '32px' }}
-                      >
-                        {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                    )}
-                    {currentUser?.name}
+                    <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                         style={{ width: '30px', height: '30px' }}>
+                      {getUserName().charAt(0).toUpperCase()}
+                    </div>
+                    <span>{getUserName()}</span>
                   </div>
                 }
                 id="user-dropdown"
@@ -78,30 +76,19 @@ const Navigation = () => {
                 <LinkContainer to="/profile" onClick={closeNav}>
                   <NavDropdown.Item>Profile</NavDropdown.Item>
                 </LinkContainer>
-                <LinkContainer to="/profile/posts" onClick={closeNav}>
-                  <NavDropdown.Item>My Posts</NavDropdown.Item>
-                </LinkContainer>
                 <NavDropdown.Divider />
-                {currentUser?.roles?.includes('ROLE_ADMIN') && (
-                  <LinkContainer to="/admin" onClick={closeNav}>
-                    <NavDropdown.Item>Admin Dashboard</NavDropdown.Item>
-                  </LinkContainer>
-                )}
                 <NavDropdown.Item onClick={handleLogout}>
                   Logout
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <>
-                <LinkContainer to="/login" onClick={closeNav}>
-                  <Nav.Link>Login</Nav.Link>
-                </LinkContainer>
-                <LinkContainer to="/register" onClick={closeNav}>
-                  <Nav.Link className="btn btn-outline-light btn-sm ms-2">
-                    Sign Up
-                  </Nav.Link>
-                </LinkContainer>
-              </>
+              <Button 
+                variant="outline-light" 
+                onClick={handleLogin}
+                className="ms-2"
+              >
+                Login
+              </Button>
             )}
           </Nav>
         </Navbar.Collapse>

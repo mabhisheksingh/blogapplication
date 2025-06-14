@@ -2,16 +2,15 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useAuth } from './context/AuthContext';
 import Navigation from './components/Navigation';
 import Home from './pages/Home';
 import Posts from './pages/Posts';
 import PostDetail from './pages/PostDetail';
 import PostForm from './pages/PostForm';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import {useKeycloak} from '@react-keycloak/web'
 
 // Protected Route Component
 const PrivateRoute = ({ children, requiredRoles = [] }) => {
@@ -28,28 +27,28 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
   }
 
   if (!currentUser) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (requiredRoles.length > 0 && !requiredRoles.some(role => currentUser.roles?.includes(role))) {
-    return <Navigate to="/not-authorized" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
+const { keycloak,initialized } = useKeycloak();
+console.log(keycloak);
+console.log(initialized);
 
-function AppContent() {
+function App() {
   return (
     <Router>
       <Navigation />
       <Container className="mt-4">
         <Routes>
-          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/posts" element={<Posts />} />
           <Route path="/posts/:id" element={<PostDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           
           {/* Protected Routes */}
           <Route
@@ -63,7 +62,7 @@ function AppContent() {
           <Route
             path="/posts/new"
             element={
-              <PrivateRoute requiredRoles={['ROLE_AUTHOR', 'ROLE_ADMIN']}>
+              <PrivateRoute requiredRoles={['USER', 'ADMIN','ROOT']}>
                 <PostForm />
               </PrivateRoute>
             }
@@ -71,25 +70,16 @@ function AppContent() {
           <Route
             path="/posts/:id/edit"
             element={
-              <PrivateRoute requiredRoles={['ROLE_AUTHOR', 'ROLE_ADMIN']}>
+              <PrivateRoute requiredRoles={['USER', 'ADMIN','ROOT']}>
                 <PostForm isEditMode={true} />
               </PrivateRoute>
             }
           />
           
-          {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Container>
     </Router>
-  );
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
   );
 }
 
