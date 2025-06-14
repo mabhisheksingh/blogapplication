@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Container, Row, Col, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { postsAPI } from '../services/api';
+import { useApi } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 
 const Posts = () => {
   const { keycloak, initialized } = useKeycloak();
+  const { postsAPI } = useApi();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!initialized || !keycloak.authenticated) return;
+    if (!initialized) return;
 
     const fetchPosts = async () => {
+      if (!keycloak.authenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
         const response = await postsAPI.getAllPosts();
         setPosts(response.data);
       } catch (err) {
@@ -26,7 +33,7 @@ const Posts = () => {
     };
 
     fetchPosts();
-  }, [initialized, keycloak.authenticated]);
+  }, [initialized, keycloak.authenticated, postsAPI]);
 
   if (loading) {
     return (

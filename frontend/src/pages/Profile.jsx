@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Container, Form, Alert, Spinner, Tab, Tabs } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext.jsx';
-import { exportedAPI as authAPI, postsAPI } from '../services/api';
+import { useApi } from '../services/api';
+import { useKeycloak } from '@react-keycloak/web';
 
 const Profile = () => {
   const { currentUser, updateUser } = useAuth();
+  const { keycloak, initialized } = useKeycloak();
+  const { postsAPI, authAPI } = useApi();
+  
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     name: '',
@@ -21,24 +25,49 @@ const Profile = () => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    if (!initialized) return;
+    
+    // Redirect to login if not authenticated
+    if (!keycloak.authenticated) {
+      keycloak.login();
+      return;
+    }
+
     if (currentUser) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: currentUser.name || '',
         email: currentUser.email || '',
         bio: currentUser.bio || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
+        // Don't reset passwords to avoid losing input
+      }));
       
       // Fetch user's posts
       const fetchUserPosts = async () => {
         try {
+          setLoading(true);
+          setError('');
+          
           const response = await postsAPI.getAllPosts({ authorId: currentUser.id });
-          setUserPosts(response.data);
+          setUserPosts(response.data || []);
         } catch (err) {
           console.error('Error fetching user posts:', err);
           setError('Failed to load your posts');
+          
+          // If unauthorized, try to refresh token
+          if (err.response?.status === 401) {
+            try {
+              await keycloak.updateToken(30);
+              // Retry the request
+              const retryResponse = await postsAPI.getAllPosts({ authorId: currentUser.id });
+              setUserPosts(retryResponse.data || []);
+              return;
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+              keycloak.login();
+              return;
+            }
+          }
         } finally {
           setLoading(false);
         }
@@ -46,7 +75,7 @@ const Profile = () => {
       
       fetchUserPosts();
     }
-  }, [currentUser]);
+  }, [currentUser, initialized, keycloak, postsAPI]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,54 +92,64 @@ const Profile = () => {
     setSuccess('');
 
     try {
-      const updatedUser = await authAPI.updateProfile({
+      const updateData = {
         name: formData.name,
-        bio: formData.bio,
-      });
+        email: formData.email,
+        bio: formData.bio
+      };
+
+      // Only include password fields if they're being changed
+      if (formData.currentPassword && formData.newPassword) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          throw new Error('New passwords do not match');
+        }
+        updateData.currentPassword = formData.currentPassword;
+        updateData.newPassword = formData.newPassword;
+      }
+
+      // Get a fresh token before making the request
+      try {
+        await keycloak.updateToken(30);
+      } catch (tokenError) {
+        console.error('Failed to refresh token:', tokenError);
+        keycloak.login();
+        return;
+      }
+
+      // Call the update API
+      const response = await authAPI.updateUser(currentUser.id, updateData);
       
-      updateUser(updatedUser.data);
+      // Update the auth context with the new user data
+      updateUser(response.data);
+      
+      // Show success message
       setSuccess('Profile updated successfully!');
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      setError(err.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-    
-    if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    
-    setSaving(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await authAPI.changePassword({
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-      });
       
-      setSuccess('Password updated successfully!');
-      setFormData({
-        ...formData,
+      // Clear password fields
+      setFormData(prev => ({
+        ...prev,
         currentPassword: '',
         newPassword: '',
-        confirmPassword: '',
-      });
+        confirmPassword: ''
+      }));
+      
     } catch (err) {
-      console.error('Error changing password:', err);
-      setError(err.response?.data?.message || 'Failed to change password');
+      console.error('Error updating profile:', err);
+      
+      // Handle token expiration
+      if (err.response?.status === 401) {
+        try {
+          await keycloak.updateToken(30);
+          // Retry the request
+          return handleSubmit(e);
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          keycloak.login();
+          return;
+        }
+      }
+      
+      setError(err.response?.data?.message || err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }

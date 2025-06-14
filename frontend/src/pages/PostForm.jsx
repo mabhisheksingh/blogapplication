@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Button, Card, Container, Alert, Spinner } from 'react-bootstrap';
-import { postsAPI } from '../services/api';
+import { useApi } from '../services/api';
+import { useKeycloak } from '@react-keycloak/web';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const PostForm = ({ isEditMode = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { keycloak, initialized } = useKeycloak();
+  const { postsAPI } = useApi();
   const { currentUser } = useAuth();
   
   const [formData, setFormData] = useState({
@@ -23,10 +26,20 @@ const PostForm = ({ isEditMode = false }) => {
   const [preview, setPreview] = useState('');
 
   useEffect(() => {
+    if (!initialized) return;
+    
+    // Redirect to login if not authenticated
+    if (!keycloak.authenticated) {
+      keycloak.login();
+      return;
+    }
+
     if (isEditMode && id) {
       const fetchPost = async () => {
         try {
           setLoading(true);
+          setError('');
+          
           const response = await postsAPI.getPostById(id);
           const post = response.data;
           
@@ -80,25 +93,44 @@ const PostForm = ({ isEditMode = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
+    
+    if (!formData.title || !formData.content) {
+      setError('Title and content are required');
+      return;
+    }
+    
+    // Ensure user is authenticated
+    if (!keycloak.authenticated) {
+      keycloak.login();
+      return;
+    }
+    
     try {
-      const postData = {
-        ...formData,
-        authorId: currentUser.id,
-      };
-
+      setSubmitting(true);
+      setError('');
+      
+      let response;
       if (isEditMode) {
-        await postsAPI.updatePost(id, postData);
+        response = await postsAPI.updatePost(id, formData);
       } else {
-        await postsAPI.createPost(postData);
+        response = await postsAPI.createPost(formData);
       }
       
-      navigate('/posts');
+      // If we have a response, navigate to the post detail page
+      if (response?.data?.id) {
+        navigate(`/posts/${response.data.id}`);
+      } else {
+        // Fallback to posts list if we don't have post ID
+        navigate('/posts');
+      }
     } catch (err) {
       console.error('Error saving post:', err);
       setError(err.response?.data?.message || 'Failed to save post. Please try again.');
+      
+      // If token is invalid, force login
+      if (err.response?.status === 401) {
+        keycloak.login();
+      }
     } finally {
       setSubmitting(false);
     }

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Container, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import { postsAPI, commentsAPI } from '../services/api';
+import { useApi } from '../services/api';
+import { useKeycloak } from '@react-keycloak/web';
 
 const PostDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { keycloak, initialized } = useKeycloak();
+  const { postsAPI, commentsAPI } = useApi();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,15 +17,29 @@ const PostDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!initialized) return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError('');
+        
+        // Only fetch post data if not authenticated
+        if (!keycloak.authenticated) {
+          const postResponse = await postsAPI.getPostById(id);
+          setPost(postResponse.data);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch both post and comments if authenticated
         const [postResponse, commentsResponse] = await Promise.all([
           postsAPI.getPostById(id),
           commentsAPI.getCommentsByPostId(id)
         ]);
+        
         setPost(postResponse.data);
-        setComments(commentsResponse.data);
+        setComments(commentsResponse.data || []);
       } catch (err) {
         setError('Failed to fetch post details. Please try again later.');
         console.error('Error:', err);
@@ -32,17 +49,18 @@ const PostDetail = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, initialized, keycloak.authenticated, postsAPI, commentsAPI]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !keycloak.authenticated) return;
 
     try {
       setIsSubmitting(true);
       const response = await commentsAPI.addComment(id, { content: commentText });
-      setComments([...comments, response.data]);
+      setComments(prev => [...prev, response.data]);
       setCommentText('');
+      setError('');
     } catch (err) {
       console.error('Error adding comment:', err);
       setError('Failed to add comment. Please try again.');
