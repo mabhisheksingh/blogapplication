@@ -44,12 +44,13 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
+  @Transactional
   public ResponseCommentDTO createComment(CreateCommentDTO createCommentDTO) {
     log.info("CreateComment called");
-    log.debug("Creating comment for post with ID: {}", createCommentDTO.getPostId());
+    log.info("Creating comment for post : {}", createCommentDTO);
     Comment comment = commentMapper.toEntity(createCommentDTO);
     comment = commentRepository.save(comment);
-    log.debug("Comment saved with ID: {}", comment.getId());
+    log.info("Comment saved with ID: {}", comment.getId());
     return commentMapper.toResponseDto(comment);
   }
 

@@ -38,7 +38,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll() // allow OPTIONS for CORS
                     // Publicly accessible endpoints (no authentication required)
-                    .requestMatchers("/v1/api/public/**")
+                    .requestMatchers("/v1/api/public/**","/v1/api/post/categories/**")
                     .permitAll() // Example: allow anyone to view posts
                     .requestMatchers("/api/comments", "/api/comments/{id}")
                     .permitAll() // Example: allow anyone to view comments

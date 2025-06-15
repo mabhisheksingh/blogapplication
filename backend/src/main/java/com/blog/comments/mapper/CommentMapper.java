@@ -13,14 +13,9 @@ public interface CommentMapper {
 
   // Map from CreateCommentDTO → CommentEntity (for saving)
   @Mappings({
-    @Mapping(target = "authorUserName", ignore = true),
-    @Mapping(target = "authorEmail", ignore = true),
-    @Mapping(target = "createdAt", ignore = true),
-    @Mapping(target = "updatedAt", ignore = true),
     @Mapping(target = "isEdited", constant = "false")
   })
   Comment toEntity(CreateCommentDTO dto);
 
-  // Map from CommentEntity → ResponseCommentDTO (for returning response)
   ResponseCommentDTO toResponseDto(Comment entity);
 }

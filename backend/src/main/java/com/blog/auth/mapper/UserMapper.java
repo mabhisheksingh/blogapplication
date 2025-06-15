@@ -11,16 +11,8 @@ import org.mapstruct.Named;
 @Mapper
 public interface UserMapper {
 
-  //  @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-  //  @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-  // @Mapping(target = "profileImage", expression =
-  // "java(Base64.getDecoder().decode(dto.getProfileImageBase64()))")
   CreateUserResponse toCreateUserResponse(User user);
 
-  //  @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-  //  @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-  // @Mapping(target = "profileImage", expression =
-  // "java(Base64.getDecoder().decode(dto.getProfileImageBase64()))")
   CreateUserResponse toCreateUserResponse(CreateUserRequest createUserRequest);
 
   @Mapping(target = "profileImage", source = "profileImage", qualifiedByName = "stringToByteArray")

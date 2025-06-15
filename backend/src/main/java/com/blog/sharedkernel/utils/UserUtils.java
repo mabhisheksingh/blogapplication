@@ -47,4 +47,15 @@ public final class UserUtils {
     }
     return authentication == null ? Optional.empty() : Optional.of(authentication.getName());
   }
+
+  // ✅ Get Username (preferred_username claim)
+  public static Optional<String> getLoggedInEmail() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+      Jwt jwt = jwtAuth.getToken();
+      return Optional.of(jwt.getClaimAsString("email"));
+    }
+    return authentication == null ? Optional.empty() : Optional.of(authentication.getName());
+  }
 }

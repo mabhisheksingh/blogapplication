@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -10,9 +10,10 @@ import {
   Image, 
   Form 
 } from 'react-bootstrap';
-import { postsAPI, commentsAPI,setupInterceptors } from '../services/api';
+import { postsAPI, commentsAPI, setupInterceptors } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 import { formatDistanceToNow } from 'date-fns';
+import CommentItem from '../components/CommentItem';
 
 const PostDetail = () => {
   const { id } = useParams();
@@ -25,73 +26,98 @@ const PostDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const addNewComment = useCallback((newComment) => {
+    setComments(prev => [{
+      ...newComment,
+      content: newComment.comment, // Map comment field to content
+      author: {
+        id: keycloak.subject,
+        name: keycloak.tokenParsed?.name || keycloak.tokenParsed?.preferred_username,
+        email: keycloak.tokenParsed?.email || '',
+        username: keycloak.tokenParsed?.preferred_username || '',
+        avatar: keycloak.tokenParsed?.picture
+      },
+      authorUserName: keycloak.tokenParsed?.preferred_username,
+      authorEmail: keycloak.tokenParsed?.email
+    }, ...prev]);
+  }, [keycloak]);
+
+  const fetchComments = useCallback(async () => {
+    try {
+      const response = await commentsAPI.getCommentsByPostId(id, {
+        page: 0,
+        size: 50,
+        sort: 'createdAt,desc'
+      });
+      
+      // The API now returns paginated data with comments in response.data.content
+      const commentsData = response.data?.content || [];
+      const transformedComments = commentsData.map(comment => ({
+        ...comment,
+        // Map the API response fields to match our frontend structure
+        content: comment.comment, // Map 'comment' field to 'content'
+        author: {
+          id: comment.authorId || 'unknown',
+          name: comment.authorUserName || 'Anonymous',
+          email: comment.authorEmail || '',
+          username: comment.authorUserName || ''
+        },
+        // Initialize empty replies array for each comment
+        replies: []
+      }));
+      
+      setComments(transformedComments);
+      return transformedComments;
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+      setError('Failed to load comments. Please try refreshing the page.');
+      return [];
+    }
+  }, [id]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const [postResponse] = await Promise.all([
+        postsAPI.getPostById(id),
+        fetchComments()
+      ]);
+      
+      const postData = postResponse.data;
+      
+      const transformedPost = {
+        ...postData,
+        imageUrl: postData.featuredImage || postData.imageUrl || '',
+        excerpt: postData.excerpt || '',
+        categories: Array.isArray(postData.categories) 
+          ? postData.categories.map(cat => typeof cat === 'object' ? cat.name : String(cat || ''))
+          : [],
+        tags: Array.isArray(postData.tags)
+          ? postData.tags.map(tag => typeof tag === 'object' ? tag.name : String(tag || ''))
+          : []
+      };
+      
+      setPost(transformedPost);
+    } catch (err) {
+      console.error('Error fetching post:', err);
+      setError(err.response?.data?.message || 'Failed to fetch post. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, fetchComments]);
+
   useEffect(() => {
     if (!initialized) return;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        // Always fetch the post data
-        const postResponse = await postsAPI.getPostById(id);
-        const postData = postResponse.data;
-        
-        // If authenticated, also fetch comments
-        if (keycloak.authenticated) {
-          try {
-            const commentsResponse = await commentsAPI.getCommentsByPostId(id);
-            // Ensure we always set an array, even if response.data is undefined or null
-            const commentsData = Array.isArray(commentsResponse?.data) 
-              ? commentsResponse.data 
-              : [];
-            setComments(commentsData);
-          } catch (commentErr) {
-            console.error('Error fetching comments:', commentErr);
-            // Set empty array on error to prevent map errors
-            setComments([]);
-          }
-        } else {
-          // Ensure comments is always an array, even for non-authenticated users
-          setComments([]);
-        }
-        
-        // Transform post data to match our expected format
-        const transformedPost = {
-          ...postData,
-          // Handle both imageUrl and featuredImage
-          imageUrl: postData.featuredImage || postData.imageUrl || '',
-          // Handle excerpt (use excerpt if available, otherwise use empty string)
-          excerpt: postData.excerpt || '',
-          // Ensure categories is an array of strings
-          categories: Array.isArray(postData.categories) 
-            ? postData.categories.map(cat => typeof cat === 'object' ? cat.name : String(cat || ''))
-            : [],
-          // Ensure tags is an array of strings
-          tags: Array.isArray(postData.tags)
-            ? postData.tags.map(tag => typeof tag === 'object' ? tag.name : String(tag || ''))
-            : []
-        };
-        
-        console.log('Transformed post data:', transformedPost);
-        
-        setPost(transformedPost);
-      } catch (err) {
-        console.error('Error fetching post:', err);
-        setError(err.response?.data?.message || 'Failed to fetch post. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Set up interceptors with keycloak
+    
     const cleanup = setupInterceptors(keycloak);
     fetchData();
     
     return () => {
       if (cleanup) cleanup();
     };
-  }, [id, initialized, keycloak, postsAPI, commentsAPI]);
+  }, [initialized, keycloak, fetchData]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -99,17 +125,28 @@ const PostDetail = () => {
 
     try {
       setIsSubmitting(true);
-      const response = await commentsAPI.addComment(id, { content: commentText });
-      setComments(prev => [...prev, response.data]);
+      const response = await commentsAPI.addComment(id, {
+        content: commentText,
+        edited: false
+      });
+      
+      addNewComment(response.data);
       setCommentText('');
       setError('');
     } catch (err) {
       console.error('Error adding comment:', err);
-      setError('Failed to add comment. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Failed to add comment. Please try again.';
+      setError(errorMessage);
+      
+      if (err.response?.status === 401) {
+        keycloak.login();
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   const handleDeletePost = async () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
@@ -121,6 +158,10 @@ const PostDetail = () => {
         setError('Failed to delete post. Please try again.');
       }
     }
+  };
+
+  const formatDate = (dateString) => {
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
   };
 
   if (loading) {
@@ -137,16 +178,14 @@ const PostDetail = () => {
     return (
       <Container className="mt-4">
         <Alert variant="danger">{error}</Alert>
+        <Button variant="secondary" onClick={() => window.location.reload()} className="mt-3">
+          Refresh Page
+        </Button>
       </Container>
     );
   }
 
   if (!post) return null;
-
-  // Format date to relative time (e.g., "2 days ago")
-  const formatDate = (dateString) => {
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-  };
 
   return (
     <Container className="py-4">
@@ -168,7 +207,6 @@ const PostDetail = () => {
               style={{ objectFit: 'cover', maxHeight: '500px' }}
               alt={post.title}
               onError={(e) => {
-                // Fallback to a placeholder if image fails to load
                 e.target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Available';
               }}
             />
@@ -299,7 +337,13 @@ const PostDetail = () => {
           </Alert>
         )}
         
-        {(!comments || comments.length === 0) ? (
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            {error}
+          </Alert>
+        )}
+        
+        {comments.length === 0 ? (
           <div className="text-center py-5 text-muted">
             <i className="bi bi-chat-square-text fs-1 d-block mb-2"></i>
             <p className="h5">No comments yet</p>
@@ -308,29 +352,15 @@ const PostDetail = () => {
         ) : (
           <div className="comments">
             {comments.map(comment => (
-              <Card key={comment.id} className="mb-3 border-0 shadow-sm">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center">
-                      <div 
-                        className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
-                        style={{ width: '32px', height: '32px', fontSize: '14px' }}
-                      >
-                        {comment.author?.name?.charAt(0) || 'A'}
-                      </div>
-                      <div className="ms-2">
-                        <strong className="d-block">{comment.author?.name || 'Anonymous'}</strong>
-                      </div>
-                    </div>
-                    <small className="text-muted">
-                      {formatDate(comment.createdAt)}
-                    </small>
-                  </div>
-                  <div className="ms-4 ps-3 border-start">
-                    <p className="mb-0">{comment.content}</p>
-                  </div>
-                </Card.Body>
-              </Card>
+              <CommentItem 
+                key={comment.id} 
+                comment={comment}
+                currentUser={keycloak.authenticated ? {
+                  id: keycloak.subject,
+                  name: keycloak.tokenParsed?.name || keycloak.tokenParsed?.preferred_username,
+                  avatar: keycloak.tokenParsed?.picture
+                } : null}
+              />
             ))}
           </div>
         )}

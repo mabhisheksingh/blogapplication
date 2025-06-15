@@ -119,17 +119,30 @@ const createApiMethods = (api) => ({
 
   // COMMENT APIs
   commentsAPI: {
-    // GET /api/comments/post/{postId}?pageable=...  (params can include pageable)
-    getCommentsByPostId: (postId, params) => api.get(`/api/comments/post/${postId}`, { params }),
-    // POST /api/comments  – body should include { postId, content, parentId? }
-    addComment: (postId, data) => api.post('/api/comments', { postId, ...data }),
-    // DELETE /api/comments/{id}
-    deleteComment: (commentId) => api.delete(`/api/comments/${commentId}`),
-    // PUT /api/comments/{id}
-    updateComment: (commentId, data) => api.put(`/api/comments/${commentId}`, data),
-    // Additional helpers
-    getCommentTree: (postId) => api.get(`/api/comments/post/${postId}/tree`),
-    getCommentCount: (postId) => api.get(`/api/comments/post/${postId}/count`),
+    // GET /v1/api/comment/post/{postId}?pageable=...  (params can include pageable)
+    getCommentsByPostId: (postId, params) => api.get(`/v1/api/comment/post/${postId}`, { params }),
+    // POST /v1/api/comment  – body should include { postId, comment, edited }
+    addComment: (postId, data) => api.post('/v1/api/comment', { 
+      postId,
+      comment: data.content,
+      edited: data.edited || false 
+    }),
+    // POST /v1/api/comment/reply  – body should include { postId, parentId, comment, edited }
+    addReply: (postId, parentId, content) => 
+      api.post('/v1/api/comment/reply', { 
+        postId, 
+        parentId, 
+        comment: content,
+        edited: false 
+      }),
+    // DELETE /v1/api/comment/{id}
+    deleteComment: (commentId) => api.delete(`/v1/api/comment/${commentId}`),
+    // PUT /v1/api/comment/{id}
+    updateComment: (commentId, data) => api.put(`/v1/api/comment/${commentId}`, data),
+    // GET /v1/api/comment/tree/post/{postId}
+    getCommentTree: (postId) => api.get(`/v1/api/comment/tree/post/${postId}`),
+    // GET /v1/api/comment/count/post/{postId}
+    getCommentCount: (postId) => api.get(`/v1/api/comment/count/post/${postId}`),
   },
 
   // Auth API
