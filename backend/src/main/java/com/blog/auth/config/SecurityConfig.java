@@ -38,16 +38,18 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.OPTIONS, "/**")
                     .permitAll() // allow OPTIONS for CORS
                     // Publicly accessible endpoints (no authentication required)
-                    .requestMatchers("/v1/api/public/**","/v1/api/post/categories/**")
-                    .permitAll() // Example: allow anyone to view posts
-                    .requestMatchers("/api/comments", "/api/comments/{id}")
-                    .permitAll() // Example: allow anyone to view comments
+                    .requestMatchers("/v1/api/public/**", "/v1/api/post/categories")
+                    .permitAll() 
                     .requestMatchers("/public/**", "/swagger-ui/**", "/v3/api-docs/**")
-                    .permitAll() // Common public paths
-                    // Endpoints requiring specific roles or authentication
+                    .permitAll()
+                    // Comment endpoints - require authentication
+                    .requestMatchers(HttpMethod.GET, "/v1/api/comment/**")
+                    .permitAll() // Allow reading comments without authentication
+                    .requestMatchers("/v1/api/comment/**")
+                    .hasAnyRole("USER", "ADMIN", "ROOT") // Require authentication for write operations
+                    // Admin endpoints
                     .requestMatchers("/v1/api/admin/**")
-                    .hasAnyRole(
-                        "ADMIN", "ROOT") // Only ADMIN and ROOT role can access admin endpoints
+                    .hasAnyRole("ADMIN", "ROOT")
                     .anyRequest()
                     .authenticated() // All other requests require authentication
             )
@@ -61,7 +63,7 @@ public class SecurityConfig {
 
     // Disable CSRF for API-only applications (common for REST APIs with token-based auth)
     http.csrf(AbstractHttpConfigurer::disable);
-    http.cors(cors -> cors.disable());
+    http.cors(AbstractHttpConfigurer::disable);
 
     return http.build();
   }

@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -68,6 +69,7 @@ public class CommentController {
         @ApiResponse(responseCode = "400", description = "Invalid input")
       })
   @PostMapping
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<ResponseCommentDTO> createComment(
       @Parameter(description = "Comment details to create", required = true) @Valid @RequestBody
           CreateCommentDTO commentDto) {
