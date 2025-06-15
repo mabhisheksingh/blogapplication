@@ -9,7 +9,8 @@
       "sharedkernel::sharedkernel.exception",
       "sharedkernel::sharedkernel.dto",
       "sharedkernel::sharedkernel.entity",
-      "sharedkernel::sharedkernel.mapper"
+      "sharedkernel::sharedkernel.mapper",
+      "sharedkernel::sharedkernel.utils"
     })
 package com.blog.posts;
 

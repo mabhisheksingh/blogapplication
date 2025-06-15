@@ -6,12 +6,9 @@ import jakarta.validation.constraints.Null;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
-@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-
 @Data
 public class PostDTO {
   private String title;

@@ -2,10 +2,7 @@ package com.blog.auth.model;
 
 import com.blog.sharedkernel.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
@@ -13,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "users")
+@EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity {
 
   @Column(nullable = false, unique = true)

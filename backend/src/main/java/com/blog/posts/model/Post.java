@@ -40,9 +40,11 @@ public class Post extends BaseEntity {
   private String excerpt;
 
   @Column(nullable = false, columnDefinition = "boolean default false")
+  @Builder.Default
   private boolean published = false;
 
   @Column(columnDefinition = "boolean default false")
+  @Builder.Default
   private boolean deleted = false;
 
   @ManyToMany
@@ -50,6 +52,7 @@ public class Post extends BaseEntity {
       name = "post_categories",
       joinColumns = @JoinColumn(name = "post_id"),
       inverseJoinColumns = @JoinColumn(name = "category_id"))
+  @Builder.Default
   private Set<Category> categories = new HashSet<>();
 
   @ManyToMany(cascade = CascadeType.PERSIST)
@@ -57,5 +60,6 @@ public class Post extends BaseEntity {
       name = "post_tags",
       joinColumns = @JoinColumn(name = "post_id"),
       inverseJoinColumns = @JoinColumn(name = "tag_id"))
+  @Builder.Default
   private Set<Tag> tags = new HashSet<>();
 }

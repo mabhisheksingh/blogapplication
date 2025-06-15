@@ -1,43 +1,26 @@
 package com.blog.comments.mapper;
 
-import com.blog.comments.dto.CommentDto;
+import com.blog.comments.dto.request.CreateCommentDTO;
+import com.blog.comments.dto.response.ResponseCommentDTO;
 import com.blog.comments.model.Comment;
-import com.blog.sharedkernel.mapper.BaseMapper;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(
-    componentModel = "spring",
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    uses = {},
-    builder = @Builder(disableBuilder = true))
-public interface CommentMapper extends BaseMapper<CommentDto, Comment> {
+@Mapper(componentModel = "spring")
+public interface CommentMapper {
 
-  @Override
-  @Mapping(target = "id", source = "id")
-  @Mapping(target = "replies", ignore = true)
-  @Mapping(target = "parent", ignore = true) // Will be set manually in service
-  Comment toEntity(CommentDto dto);
+  CommentMapper INSTANCE = Mappers.getMapper(CommentMapper.class);
 
-  @Override
-  @Mapping(target = "parentId", source = "parent.id")
-  @Mapping(target = "replies", ignore = true) // Will be set manually in service
-  CommentDto toDto(Comment entity);
+  // Map from CreateCommentDTO → CommentEntity (for saving)
+  @Mappings({
+    @Mapping(target = "authorUserName", ignore = true),
+    @Mapping(target = "authorEmail", ignore = true),
+    @Mapping(target = "createdAt", ignore = true),
+    @Mapping(target = "updatedAt", ignore = true),
+    @Mapping(target = "isEdited", constant = "false")
+  })
+  Comment toEntity(CreateCommentDTO dto);
 
-  @Override
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "replies", ignore = true)
-  @Mapping(target = "parent", ignore = true) // Will be set manually in service
-  void updateEntityFromDto(CommentDto dto, @MappingTarget Comment entity);
-
-  /**
-   * Creates a CommentMapper instance
-   *
-   * @return CommentMapper instance
-   */
-  static CommentMapper getInstance() {
-    return Mappers.getMapper(CommentMapper.class);
-  }
+  // Map from CommentEntity → ResponseCommentDTO (for returning response)
+  ResponseCommentDTO toResponseDto(Comment entity);
 }

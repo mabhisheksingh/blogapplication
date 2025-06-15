@@ -111,7 +111,7 @@ public class PostServiceImpl implements PostService {
     existingPost.setAuthorName(postDTO.getAuthorUsername());
     Set<Category> set =
         postDTO.getCategories().stream()
-                .filter(Objects::nonNull)
+            .filter(Objects::nonNull)
             .map(categoryRepository::findById)
             .filter(Optional::isPresent)
             .map(Optional::get)
