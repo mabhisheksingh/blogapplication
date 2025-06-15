@@ -56,6 +56,14 @@
       "containerId" : "5236d5ec-0baf-42b7-9d72-f33bd14eb5b2",
       "attributes" : { }
     }, {
+      "id" : "965cd664-3bdc-49a7-ad7f-086c65faa240",
+      "name" : "ADMIN",
+      "description" : "ADMIN role",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "5236d5ec-0baf-42b7-9d72-f33bd14eb5b2",
+      "attributes" : { }
+    }, {
       "id" : "b61430cd-3e0d-4b0d-813b-77ef38073616",
       "name" : "default-roles-fusion-master",
       "description" : "${role_default-roles}",
@@ -66,6 +74,22 @@
           "account" : [ "manage-account", "view-profile" ]
         }
       },
+      "clientRole" : false,
+      "containerId" : "5236d5ec-0baf-42b7-9d72-f33bd14eb5b2",
+      "attributes" : { }
+    }, {
+      "id" : "f2879fc9-d9f2-47a2-828e-e40e841f59b5",
+      "name" : "ROOT",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "5236d5ec-0baf-42b7-9d72-f33bd14eb5b2",
+      "attributes" : { }
+    }, {
+      "id" : "d427c40b-8836-4a25-9238-474ccbc87ca1",
+      "name" : "USER",
+      "description" : "User role",
+      "composite" : false,
       "clientRole" : false,
       "containerId" : "5236d5ec-0baf-42b7-9d72-f33bd14eb5b2",
       "attributes" : { }
@@ -399,7 +423,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-fusion-master" ],
+    "realmRoles" : [ "default-roles-fusion-master", "ROOT" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -1371,7 +1395,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "saml-role-list-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper" ]
       }
     }, {
       "id" : "c591382b-b4b2-47f1-a8df-6fceb8dd004c",
@@ -1422,7 +1446,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "saml-user-property-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-full-name-mapper" ]
       }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
