@@ -7,18 +7,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.stereotype.Component;
 
-@Component
 @Slf4j
-public class UserUtils {
+public final class UserUtils {
+  private UserUtils() {}
 
-  Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-  public UserUtils() {}
-
-  public Optional<String> getLoggedInUserId() {
+  public static Optional<String> getLoggedInUserId() {
     log.info("getLoggedInUserId");
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     log.info("getLoggedInUserId authentication: {}", authentication);
     if (authentication instanceof JwtAuthenticationToken jwtAuth) {
       Jwt jwt = jwtAuth.getToken();
@@ -27,5 +23,28 @@ public class UserUtils {
     return Objects.isNull(authentication)
         ? Optional.empty()
         : Optional.of(authentication.getName());
+  }
+
+  // ✅ Get Username (preferred_username claim)
+  public static Optional<String> getLoggedInUsername() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+      Jwt jwt = jwtAuth.getToken();
+      return Optional.ofNullable(jwt.getClaimAsString("preferred_username"));
+    }
+    return authentication == null ? Optional.empty() : Optional.of(authentication.getName());
+  }
+
+  // ✅ Get Username (preferred_username claim)
+  public static Optional<String> getLoggedInFullName() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+      Jwt jwt = jwtAuth.getToken();
+      return Optional.of(
+          jwt.getClaimAsString("family_name") + " " + jwt.getClaimAsString("given_name"));
+    }
+    return authentication == null ? Optional.empty() : Optional.of(authentication.getName());
   }
 }

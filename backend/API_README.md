@@ -1,9 +1,237 @@
-# My API
-This is a sample Spring Boot 3.5 API with Swagger
+# Blog Application API
+
+This is the backend API for the Blog Application, built with Spring Boot 3.5 and secured with Keycloak.
+
+## Base URL
+`http://localhost:9001/v1/api`
+
+## Authentication
+All endpoints except `/public/**` require authentication. Include a valid JWT token in the `Authorization` header:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
 ## Version: 1.0
 
-### /v1/api/user/users/{userId}
+## Table of Contents
+- [Posts API](#posts-api)
+- [Categories API](#categories-api)
+- [User Management](#user-management)
+- [Authentication](#authentication)
+
+## Posts API
+
+### Get All Posts
+`GET /post`
+
+**Description**: Retrieves a list of all blog posts
+
+**Authentication**: Required (USER, ADMIN, or ROOT role)
+
+**Query Parameters**:
+- `page` - Page number (default: 0)
+- `size` - Number of items per page (default: 10)
+- `sort` - Sort by field (e.g., `createdAt,desc`)
+
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "title": "Sample Post",
+    "summary": "A brief summary",
+    "content": "Full post content...",
+    "imageUrl": "https://example.com/image.jpg",
+    "createdAt": "2023-01-01T00:00:00Z",
+    "updatedAt": "2023-01-01T00:00:00Z",
+    "authorUsername": "user1",
+    "categories": ["Technology", "Programming"],
+    "tags": ["java", "spring"]
+  }
+]
+```
+
+### Get Post by ID
+`GET /post/{id}`
+
+**Description**: Retrieves a specific blog post by its ID
+
+**Parameters**:
+- `id` (path, required): The ID of the post to retrieve
+
+**Authentication**: Public (comments require authentication)
+
+**Response**:
+```json
+{
+  "id": 1,
+  "title": "Sample Post",
+  "summary": "A brief summary",
+  "content": "Full post content...",
+  "imageUrl": "https://example.com/image.jpg",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z",
+  "authorUsername": "user1",
+  "categories": ["Technology", "Programming"],
+  "tags": ["java", "spring"]
+}
+```
+
+### Create Post
+`POST /post/create`
+
+**Description**: Creates a new blog post
+
+**Authentication**: Required (USER role or higher)
+
+**Request Body**:
+```json
+{
+  "title": "New Post",
+  "summary": "A brief summary",
+  "content": "Full post content...",
+  "imageUrl": "https://example.com/image.jpg",
+  "published": true,
+  "categories": ["Technology"],
+  "tags": ["java"]
+}
+```
+
+**Response**:
+```json
+{
+  "id": 1,
+  "title": "New Post",
+  "summary": "A brief summary",
+  "content": "Full post content...",
+  "imageUrl": "https://example.com/image.jpg",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "authorUsername": "currentUser"
+}
+```
+
+### Update Post
+`PUT /post/{id}`
+
+**Description**: Updates an existing blog post
+
+**Authentication**: Required (must be the post author or ADMIN/ROOT)
+
+**Parameters**:
+- `id` (path, required): The ID of the post to update
+
+**Request Body**: Same as Create Post
+
+**Response**: Updated post details
+
+### Delete Post
+`DELETE /post/{id}`
+
+**Description**: Deletes a blog post
+
+**Authentication**: Required (must be the post author or ADMIN/ROOT)
+
+**Parameters**:
+- `id` (path, required): The ID of the post to delete
+
+**Response**: 204 No Content
+
+## Categories API
+
+### Get All Categories
+`GET /post/categories`
+
+**Description**: Retrieves a list of all available categories
+
+**Authentication**: Public
+
+**Response**:
+```json
+[
+  "Technology",
+  "Programming",
+  "Lifestyle",
+  "Travel"
+]
+```
+
+## User Management
+
+### Get Current User
+`GET /user/me`
+
+**Description**: Gets the currently authenticated user's details
+
+**Authentication**: Required
+
+**Response**:
+```json
+{
+  "id": 1,
+  "username": "user1",
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "roles": ["USER"],
+  "enabled": true
+}
+```
+
+### Update User
+`PUT /user/users/{userId}`
+
+**Description**: Updates a user's information
+
+**Authentication**: Required (must be the same user or ADMIN/ROOT)
+
+**Request Body**:
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "new.email@example.com"
+}
+```
+
+## Authentication
+
+### Login
+`POST /auth/login`
+
+**Description**: Authenticates a user and returns JWT tokens
+
+**Request Body**:
+```json
+{
+  "username": "user1",
+  "password": "password123"
+}
+```
+
+**Response**:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 300,
+  "refresh_expires_in": 1800,
+  "token_type": "bearer"
+}
+```
+
+### Refresh Token
+`POST /auth/refresh`
+
+**Description**: Refreshes an access token using a refresh token
+
+**Request Body**:
+```json
+{
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response**: Same as Login response
 
 #### GET
 ##### Summary:
@@ -33,12 +261,12 @@ Update user info
 | ---- | ----------- |
 | 200 | OK |
 
-### /v1/api/blog/{id}
+### /v1/api/post/{id}
 
 #### GET
 ##### Summary:
 
-Get blog by ID
+Get post by ID
 
 ##### Description:
 
@@ -161,7 +389,7 @@ Create user info
 | ---- | ----------- |
 | 200 | OK |
 
-### /v1/api/blog/create
+### /v1/api/post/create
 
 #### POST
 ##### Summary:
@@ -215,12 +443,12 @@ Creates a new comment on a blog post. Can be either a top-level comment or a rep
 | 201 | Comment created successfully |
 | 400 | Invalid input |
 
-### /v1/api/blog
+### /v1/api/post
 
 #### GET
 ##### Summary:
 
-Get all blogs
+Get all posts
 
 ##### Description:
 
@@ -231,6 +459,23 @@ Retrieves a list of all blog posts
 | Code | Description |
 | ---- | ----------- |
 | 200 | Successfully retrieved list of blogs |
+
+### /v1/api/post/categories
+
+#### GET
+##### Summary:
+
+Get all categories
+
+##### Description:
+
+Retrieves a list of all categories
+
+##### Responses
+
+| Code | Description |
+| ---- | ----------- |
+| 200 | Successfully retrieved list of categories |
 
 ### /v1/api/admin/users
 

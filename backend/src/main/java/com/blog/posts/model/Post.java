@@ -1,7 +1,9 @@
 package com.blog.posts.model;
 
 import com.blog.sharedkernel.entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Null;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.*;
@@ -23,8 +25,10 @@ public class Post extends BaseEntity {
   @Column(columnDefinition = "TEXT", nullable = false)
   private String content;
 
-  @Column(name = "author_id", nullable = false)
-  private String authorId;
+  @Column(name = "author_username", nullable = false)
+  private String authorUsername;
+
+  @Null @JsonIgnore private String authorName;
 
   @Column(name = "slug", nullable = false, unique = true)
   private String slug;
@@ -48,7 +52,7 @@ public class Post extends BaseEntity {
       inverseJoinColumns = @JoinColumn(name = "category_id"))
   private Set<Category> categories = new HashSet<>();
 
-  @ManyToMany
+  @ManyToMany(cascade = CascadeType.PERSIST)
   @JoinTable(
       name = "post_tags",
       joinColumns = @JoinColumn(name = "post_id"),

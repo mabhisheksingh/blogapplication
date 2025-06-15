@@ -1,4 +1,4 @@
-package com.blog.posts.dto;
+package com.blog.posts.dto.response;
 
 import com.blog.sharedkernel.dto.BaseDto;
 import lombok.*;
@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryDto extends BaseDto {
+public class CategoryDTO extends BaseDto {
   private String name;
   private String description;
   private String slug;

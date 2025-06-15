@@ -76,7 +76,7 @@ function App() {
             path="/posts/:id/edit"
             element={
               <PrivateRoute>
-                <PostForm />
+                <PostForm isEditMode={true} />
               </PrivateRoute>
             }
           />

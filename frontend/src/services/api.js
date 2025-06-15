@@ -28,18 +28,92 @@ const createApiMethods = (api) => ({
     deleteUserByUsername: (username) => api.delete(`/v1/api/admin/users/${username}`),
   },
 
-  // BLOG APIs (exposed as postsAPI for backwards-compatibility with existing components)
+  // POST APIs (exposed as postsAPI for backwards-compatibility with existing components)
   postsAPI: {
-    // GET /v1/api/blog
-    getAllPosts: (params) => api.get('/v1/api/blog', { params }),
-    // GET /v1/api/blog/{id}
-    getPostById: (id) => api.get(`/v1/api/blog/${id}`),
-    // POST /v1/api/blog/create
-    createPost: (data) => api.post('/v1/api/blog/create', data),
-    // PUT /v1/api/blog/{id}
-    updatePost: (id, data) => api.put(`/v1/api/blog/${id}`, data),
-    // DELETE /v1/api/blog/{id}
-    deletePost: (id) => api.delete(`/v1/api/blog/${id}`),
+    // GET /v1/api/post
+    getAllPosts: async (params) => {
+      const response = await api.get('/v1/api/post', { params });
+      // Transform the response to ensure consistent data structure
+      const posts = Array.isArray(response.data) ? response.data : [];
+      return {
+        ...response,
+        data: posts.map(post => ({
+          id: post.id,
+          title: post.title,
+          summary: post.summary,
+          content: post.content,
+          imageUrl: post.imageUrl,
+          authorUsername: post.authorUsername || (post.author ? post.author.username : null),
+          categories: post.categories || [],
+          tags: post.tags || [],
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt || post.createdAt,
+          status: post.status || 'PUBLISHED'
+        }))
+      };
+    },
+    
+    // GET /v1/api/post/{id}
+    getPostById: async (id) => {
+      const response = await api.get(`/v1/api/post/${id}`);
+      const post = response.data;
+      return {
+        ...response,
+        data: {
+          id: post.id,
+          title: post.title,
+          summary: post.summary,
+          content: post.content,
+          imageUrl: post.imageUrl,
+          authorUsername: post.authorUsername || (post.author ? post.author.username : null),
+          categories: post.categories || [],
+          tags: post.tags || [],
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt || post.createdAt,
+          status: post.status || 'PUBLISHED'
+        }
+      };
+    },
+    
+    // POST /v1/api/post/create
+    createPost: (data) => {
+      // Transform categories and tags to match backend expectations
+      const postData = {
+        ...data,
+        categories: Array.isArray(data.categories) ? data.categories : [],
+        tags: Array.isArray(data.tags) ? data.tags : []
+      };
+      return api.post('/v1/api/post/create', postData);
+    },
+    
+    // PUT /v1/api/post/{id}
+    updatePost: (id, data) => {
+      // Transform categories and tags to match backend expectations
+      const postData = {
+        ...data,
+        categories: Array.isArray(data.categories) ? data.categories : [],
+        tags: Array.isArray(data.tags) ? data.tags : []
+      };
+      return api.put(`/v1/api/post/${id}`, postData);
+    },
+    
+    // DELETE /v1/api/post/{id}
+    deletePost: (id) => api.delete(`/v1/api/post/${id}`),
+    
+    // GET /v1/api/post/categories
+    getCategories: async () => {
+      const response = await api.get('/v1/api/post/categories');
+      // Ensure we always return an array of categories
+      const categories = Array.isArray(response.data) ? response.data : [];
+      return {
+        ...response,
+        data: categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description || ''
+        }))
+      };
+    },
   },
 
   // COMMENT APIs

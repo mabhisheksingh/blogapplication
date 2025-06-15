@@ -35,7 +35,8 @@ public class SecurityConfig {
     http.authorizeHttpRequests(
             authorize ->
                 authorize
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow OPTIONS for CORS
+                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll() // allow OPTIONS for CORS
                     // Publicly accessible endpoints (no authentication required)
                     .requestMatchers("/v1/api/public/**")
                     .permitAll() // Example: allow anyone to view posts

@@ -28,6 +28,7 @@ export default defineConfig(({ command, mode }) => ({
     port: 4200,
     strictPort: true,
     open: true,
+    historyApiFallback: true,
     proxy: {
       '/api': {
         target: 'http://localhost:9001',

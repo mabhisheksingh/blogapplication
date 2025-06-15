@@ -8,7 +8,6 @@ import com.blog.auth.model.User;
 import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.UserService;
 import com.blog.sharedkernel.exception.UserNotFoundException;
-import com.blog.sharedkernel.utils.UserUtils;
 import jakarta.annotation.Nonnull;
 import java.util.Optional;
 import java.util.Set;
@@ -24,15 +23,10 @@ public class UserServiceImpl implements UserService {
   UserRepository userRepository;
   KeycloakClientImpl keycloakClient;
   UserMapper userMapper;
-  UserUtils userUtils;
 
   @Autowired
   public UserServiceImpl(
-      UserRepository userRepository,
-      KeycloakClientImpl keycloakClient,
-      UserMapper userMapper,
-      UserUtils userUtils) {
-    this.userUtils = userUtils;
+      UserRepository userRepository, KeycloakClientImpl keycloakClient, UserMapper userMapper) {
     this.userMapper = userMapper;
     this.keycloakClient = keycloakClient;
     this.userRepository = userRepository;

@@ -1,17 +1,20 @@
-package com.blog.posts.dto;
+package com.blog.posts.dto.request;
 
-import com.blog.sharedkernel.dto.BaseDto;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TagDto extends BaseDto {
+public class TagDTO {
   private String name;
   private String slug;
   private String description;
-  private int postCount;
+
+  public void setName(String name) {
+    this.name = (name == null) ? null : name.trim().toLowerCase();
+  }
 }

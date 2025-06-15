@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { Card, Button, Container, Row, Col, Spinner, Alert, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { postsAPI, setupInterceptors } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
@@ -64,48 +64,90 @@ const Posts = () => {
     return <div className="alert alert-danger mt-3">{error}</div>;
   }
 
+  // Format date to be more readable
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   return (
-    <Container>
+    <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Latest Posts</h1>
-        <Button as={Link} to="/posts/new" variant="primary">
-          Create New Post
-        </Button>
+        {keycloak.authenticated && (
+          <Button as={Link} to="/posts/new" variant="primary">
+            Create New Post
+          </Button>
+        )}
       </div>
       
-      <Row xs={1} md={2} lg={3} className="g-4">
-        {posts.map((post) => (
-          <Col key={post.id}>
-            <Card className="h-100">
-              <Card.Img variant="top" src={post.imageUrl || 'https://via.placeholder.com/300x200'} />
-              <Card.Body>
-                <Card.Title>{post.title}</Card.Title>
-                <Card.Text className="text-muted">
-                  {post.summary || 'No summary available'}
-                </Card.Text>
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">
-                    By {post.author?.name || 'Unknown'}
-                  </small>
-                  <Button 
-                    as={Link} 
-                    to={`/posts/${post.id}`} 
-                    variant="outline-primary" 
-                    size="sm"
-                  >
-                    Read More
-                  </Button>
-                </div>
-              </Card.Body>
-              <Card.Footer>
-                <small className="text-muted">
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </small>
-              </Card.Footer>
+      {posts.length === 0 ? (
+        <Alert variant="info">No posts found. Be the first to create one!</Alert>
+      ) : (
+        <Row xs={1} md={2} lg={3} className="g-4">
+          {posts.map((post) => (
+            <Col key={post.id}>
+              <Card className="h-100 shadow-sm">
+                {post.imageUrl && (
+                  <div style={{ height: '200px', overflow: 'hidden' }}>
+                    <Card.Img 
+                      variant="top" 
+                      src={post.imageUrl} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover' 
+                      }} 
+                    />
+                  </div>
+                )}
+
+                <Card.Body className="d-flex flex-column">
+                  <div className="mb-2">
+                    {post.categories?.map((category, idx) => (
+                      <Badge key={idx} bg="info" className="me-1 mb-1">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                  <Card.Title className="h5">{post.title}</Card.Title>
+                  <Card.Text className="text-muted flex-grow-1">
+                    {post.summary || 'No summary available'}
+                  </Card.Text>
+                  <div className="mb-2">
+                    {post.tags?.map((tag, idx) => (
+                      <Badge key={idx} bg="secondary" className="me-1 mb-1">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mt-auto">
+                    <small className="text-muted">
+                      By {post.authorUsername || 'Unknown'}
+                    </small>
+                    <Button 
+                      as={Link} 
+                      to={`/posts/${post.id}`} 
+                      variant="outline-primary" 
+                      size="sm"
+                    >
+                      Read More
+                    </Button>
+                  </div>
+                </Card.Body>
+                <Card.Footer className="text-muted">
+                  <small>Posted on {formatDate(post.createdAt)}</small>
+                </Card.Footer>
             </Card>
           </Col>
         ))}
       </Row>
+
+      )}
+
     </Container>
   );
 };

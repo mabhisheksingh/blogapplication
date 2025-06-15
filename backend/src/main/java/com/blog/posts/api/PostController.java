@@ -1,7 +1,10 @@
 package com.blog.posts.api;
 
-import com.blog.posts.dto.BlogDTO;
-import com.blog.posts.service.BlogService;
+import com.blog.posts.dto.request.PostDTO;
+import com.blog.posts.dto.response.ResponsePostDTO;
+import com.blog.posts.service.CategoriesService;
+import com.blog.posts.service.PostService;
+import com.blog.sharedkernel.utils.UserUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,56 +23,68 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/api/blog")
-@Tag(name = "Blog Controller", description = "APIs for managing blog posts")
+@RequestMapping("/v1/api/post")
+@Tag(name = "Post Controller", description = "APIs for managing blog posts")
 @Slf4j
-public class BlogController {
-  private final BlogService blogService;
+public class PostController {
+  private final PostService postService;
+  private final CategoriesService categoriesService;
 
   @Autowired
-  public BlogController(BlogService blogService) {
-    this.blogService = blogService;
+  public PostController(PostService postService, CategoriesService categoriesService) {
+    this.postService = postService;
+    this.categoriesService = categoriesService;
   }
 
-  @Operation(summary = "Get all blogs", description = "Retrieves a list of all blog posts")
+  @Operation(summary = "Get all posts", description = "Retrieves a list of all blog posts")
   @ApiResponse(
       responseCode = "200",
       description = "Successfully retrieved list of blogs",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
   @GetMapping
-  // @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
-  public ResponseEntity<List<BlogDTO>> getAllBlogs() {
-    log.info("Fetching all blogs");
-    List<BlogDTO> blogs = blogService.getAllBlogs();
-    return ResponseEntity.ok(blogs);
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
+  public ResponseEntity<List<ResponsePostDTO>> getAllBlogs() {
+    log.info("Fetching all postDTOS");
+    List<ResponsePostDTO> postDTOS = postService.getAllPosts();
+    log.debug("Successfully fetched {} postDTOS", postDTOS);
+    return ResponseEntity.ok(postDTOS);
   }
 
-  @Operation(summary = "Get blog by ID", description = "Retrieves a specific blog post by its ID")
+  @Operation(summary = "Get post by ID", description = "Retrieves a specific blog post by its ID")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "200",
             description = "Successfully retrieved blog post",
-            content = @Content(schema = @Schema(implementation = BlogDTO.class))),
+            content = @Content(schema = @Schema(implementation = ResponsePostDTO.class))),
         @ApiResponse(responseCode = "404", description = "Blog post not found", content = @Content)
       })
   @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<BlogDTO> getBlogById(
+  public ResponseEntity<ResponsePostDTO> getPostById(
       @Parameter(description = "ID of the blog post to be retrieved", required = true) @PathVariable
           Long id) {
-    BlogDTO blog = blogService.getBlogById(id);
-    return ResponseEntity.ok(blog);
+    log.info("getPostById called");
+    log.debug("Fetching blog post by id: {}", id);
+    ResponsePostDTO post = postService.getPostById(id);
+    log.debug("Successfully fetched blog post: {}", post);
+    return ResponseEntity.ok(post);
   }
 
   @Operation(summary = "Create a new blog post", description = "Creates a new blog post")
   @ApiResponse(
       responseCode = "201",
       description = "Blog post created successfully",
-      content = @Content(schema = @Schema(implementation = BlogDTO.class)))
+      content = @Content(schema = @Schema(implementation = PostDTO.class)))
   @PostMapping(path = "/create")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<BlogDTO> createBlog(@Valid @RequestBody BlogDTO blogDTO) {
-    BlogDTO createdBlog = blogService.createBlog(blogDTO);
+  public ResponseEntity<ResponsePostDTO> createBlog(@Valid @RequestBody PostDTO postDto) {
+    log.info("PostController createOrUpdatePost called");
+    UserUtils.getLoggedInUsername()
+        .ifPresentOrElse(postDto::setAuthorUsername, () -> postDto.setAuthorUsername("anonymous"));
+
+    log.info("Creating blog post: {}", postDto);
+    ResponsePostDTO createdBlog = postService.createOrUpdatePost(postDto);
+    log.info("Successfully created blog post: {}", createdBlog);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdBlog);
   }
 
@@ -79,7 +94,7 @@ public class BlogController {
         @ApiResponse(
             responseCode = "200",
             description = "Blog post updated successfully",
-            content = @Content(schema = @Schema(implementation = BlogDTO.class))),
+            content = @Content(schema = @Schema(implementation = ResponsePostDTO.class))),
         @ApiResponse(responseCode = "404", description = "Blog post not found", content = @Content)
       })
   @PutMapping(
@@ -87,16 +102,14 @@ public class BlogController {
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<BlogDTO> updateBlog(
+  public ResponseEntity<ResponsePostDTO> updatePost(
       @Parameter(description = "ID of the blog post to be updated", required = true) @PathVariable
           Long id,
-      @io.swagger.v3.oas.annotations.parameters.RequestBody(
-              description = "Updated blog post object",
-              required = true,
-              content = @Content(schema = @Schema(implementation = BlogDTO.class)))
-          @RequestBody
-          BlogDTO blogDTO) {
-    BlogDTO updatedBlog = blogService.updateBlog(id, blogDTO);
+      @RequestBody PostDTO blogDTO) {
+    log.info("UpdatePost called");
+    log.debug("Updating blog post with id: {}", id);
+    ResponsePostDTO updatedBlog = postService.createOrUpdatePost(id, blogDTO);
+    log.debug("Successfully updated blog post: {}", updatedBlog);
     return ResponseEntity.ok(updatedBlog);
   }
 
@@ -111,7 +124,17 @@ public class BlogController {
   public ResponseEntity<Void> deleteBlog(
       @Parameter(description = "ID of the blog post to be deleted", required = true) @PathVariable
           Long id) {
-    blogService.deleteBlog(id);
+    postService.deleteBlog(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(summary = "Get all categories", description = "Retrieves a list of all categories")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successfully retrieved list of categories",
+      content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+  @GetMapping("/categories")
+  public ResponseEntity<?> getAllCategories() {
+    return ResponseEntity.ok(categoriesService.getAllCategories());
   }
 }
