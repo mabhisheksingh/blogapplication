@@ -62,7 +62,8 @@ const createApiMethods = (api) => ({
         data: {
           id: post.id,
           title: post.title,
-          summary: post.summary,
+          excerpt: post.excerpt,
+          slug: post.slug,
           content: post.content,
           imageUrl: post.imageUrl,
           authorUsername: post.authorUsername || (post.author ? post.author.username : null),

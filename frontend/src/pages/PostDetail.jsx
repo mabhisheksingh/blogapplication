@@ -60,16 +60,20 @@ const PostDetail = () => {
         const transformedPost = {
           ...postData,
           // Handle both imageUrl and featuredImage
-          imageUrl: postData.featuredImage || postData.imageUrl,
+          imageUrl: postData.featuredImage || postData.imageUrl || '',
+          // Handle excerpt (use excerpt if available, otherwise use empty string)
+          excerpt: postData.excerpt || '',
           // Ensure categories is an array of strings
           categories: Array.isArray(postData.categories) 
-            ? postData.categories.map(cat => typeof cat === 'object' ? cat.name : cat)
+            ? postData.categories.map(cat => typeof cat === 'object' ? cat.name : String(cat || ''))
             : [],
           // Ensure tags is an array of strings
           tags: Array.isArray(postData.tags)
-            ? postData.tags.map(tag => typeof tag === 'object' ? tag.name : tag)
+            ? postData.tags.map(tag => typeof tag === 'object' ? tag.name : String(tag || ''))
             : []
         };
+        
+        console.log('Transformed post data:', transformedPost);
         
         setPost(transformedPost);
       } catch (err) {
@@ -220,9 +224,9 @@ const PostDetail = () => {
           </div>
         )}
 
-        {(post.summary || post.excerpt) && (
+        {post.excerpt && (
           <div className="lead mb-4 text-muted">
-            {post.summary || post.excerpt}
+            {post.excerpt}
           </div>
         )}
 

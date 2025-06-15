@@ -15,16 +15,23 @@ const PostForm = ({ isEditMode = false }) => {
   const { keycloak, initialized } = useKeycloak();
   const { currentUser } = useAuth();
   
+  // Initialize form data with all required fields
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
-    summary: '',
+    excerpt: '',
     content: '',
     featuredImage: '',
+    imageUrl: '',
     published: true,
     categories: [], // This will store category IDs
     tags: []
   });
+  
+  // Debug effect to log form data changes
+  useEffect(() => {
+    console.log('Form data updated:', formData);
+  }, [formData]);
   
   const [selectedCategories, setSelectedCategories] = useState([]);
   
@@ -105,6 +112,7 @@ const PostForm = ({ isEditMode = false }) => {
         if (!isMounted) return;
         
         const post = response.data;
+        console.log('Fetched post data:', post);
         
         // Verify if the current user is the author or admin
         if (post.authorUsername !== currentUser.username && !currentUser.roles?.includes('ROLE_ADMIN')) {
@@ -114,31 +122,43 @@ const PostForm = ({ isEditMode = false }) => {
         
         // Get category IDs from the post
         const postCategoryIds = [];
+        const postCategories = [];
+        
         if (Array.isArray(post.categories)) {
           post.categories.forEach(cat => {
             if (typeof cat === 'object' && cat.id) {
+              // Handle case where category is an object with id and name
               const numId = Number(cat.id);
               if (!isNaN(numId) && numId > 0) {
                 postCategoryIds.push(numId);
+                const foundCat = availableCategories.find(c => Number(c.value) === numId);
+                if (foundCat) {
+                  postCategories.push(foundCat);
+                }
               }
             } else if (typeof cat === 'string') {
+              // Handle case where category is a string (name)
               const foundCat = availableCategories.find(ac => ac.label === cat);
               if (foundCat) {
-                postCategoryIds.push(Number(foundCat.value));
+                const numId = Number(foundCat.value);
+                if (!postCategoryIds.includes(numId)) {
+                  postCategoryIds.push(numId);
+                  postCategories.push(foundCat);
+                }
               }
-            } else {
+            } else if (typeof cat === 'number') {
+              // Handle case where category is a number (ID)
               const numId = Number(cat);
-              if (!isNaN(numId) && numId > 0) {
+              if (!isNaN(numId) && numId > 0 && !postCategoryIds.includes(numId)) {
                 postCategoryIds.push(numId);
+                const foundCat = availableCategories.find(c => Number(c.value) === numId);
+                if (foundCat) {
+                  postCategories.push(foundCat);
+                }
               }
             }
           });
         }
-        
-        // Find matching category objects from available categories
-        const postCategories = availableCategories.filter(
-          cat => postCategoryIds.includes(Number(cat.value))
-        );
         
         console.log('Setting form data with categories:', {
           originalCategories: post.categories,
@@ -147,21 +167,27 @@ const PostForm = ({ isEditMode = false }) => {
           availableCategories: availableCategories.map(c => ({value: c.value, label: c.label}))
         });
         
-        // Update state in a single batch
-        setFormData(prev => ({
-          ...prev,
+        // Create a complete form data object with all fields
+        console.log("excerpt : "+ post.title)
+        console.log("excerpt : "+ Object.keys(post))
+        const formDataUpdate = {
           title: post.title || '',
           slug: post.slug || '',
-          summary: post.summary || post.excerpt || '',
+          excerpt: post.excerpt || '',
           content: post.content || '',
           featuredImage: post.featuredImage || post.imageUrl || '',
+          imageUrl: post.imageUrl || post.featuredImage || '',
           published: post.published !== undefined ? post.published : true,
           categories: postCategoryIds,
           tags: Array.isArray(post.tags) 
             ? post.tags.map(tag => typeof tag === 'object' ? tag.name : tag)
             : []
-        }));
+        };
         
+        console.log('Updating form data with:', formDataUpdate);
+        
+        // Update the form state in a single batch
+        setFormData(formDataUpdate);
         setSelectedCategories(postCategories);
         
         if (post.imageUrl || post.featuredImage) {
@@ -173,21 +199,22 @@ const PostForm = ({ isEditMode = false }) => {
       } finally {
         setLoading(false);
       }
-      
-      return () => {
-        if (cleanup) cleanup();
-      };
     };
-    
+
     fetchPostData();
-  }, [id, isEditMode, currentUser, navigate, keycloak, availableCategories]);
+    
+    return () => {
+      isMounted = false;
+      if (cleanup) cleanup();
+    };
+  }, [isEditMode, id, availableCategories, currentUser, navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleCategoryChange = (selectedOptions) => {
@@ -330,8 +357,8 @@ const PostForm = ({ isEditMode = false }) => {
         title: formData.title,
         slug: formData.slug,
         content: formData.content,
-        excerpt: formData.summary,
-        featuredImage: formData.featuredImage,
+        excerpt: formData.excerpt || '',
+        featuredImage: formData.featuredImage || formData.imageUrl || '',
         published: formData.published,
         // Convert category names to IDs
         categories: (() => {
@@ -433,19 +460,19 @@ const PostForm = ({ isEditMode = false }) => {
               </Form.Text>
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="summary">
-              <Form.Label>Summary</Form.Label>
+            <Form.Group className="mb-3" controlId="excerpt">
+              <Form.Label>Excerpt</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={2}
-                name="summary"
-                value={formData.summary}
+                name="excerpt"
+                value={formData.excerpt}
                 onChange={handleChange}
-                placeholder="A brief summary of your post"
+                placeholder="A brief excerpt of your post"
                 required
               />
               <Form.Text className="text-muted">
-                A short summary that will appear in post previews.
+                A short excerpt that will appear in post previews.
               </Form.Text>
             </Form.Group>
 
