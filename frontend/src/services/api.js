@@ -17,6 +17,7 @@ const createApiMethods = (api) => ({
   // USER APIs
   usersAPI: {
     getUserById: (userId) => api.get(`/v1/api/user/users/${userId}`),
+    getUserByUsername: (username) => api.get(`/v1/api/user/users/${username}`),
     updateUser: (userId, data) => api.put(`/v1/api/user/users/${userId}`, data),
     // Public create user endpoint (no auth required)
     createUserPublic: (data) => api.post('/v1/api/public/create-user', data),
@@ -26,6 +27,7 @@ const createApiMethods = (api) => ({
     getUserAdminById: (id) => api.get(`/v1/api/admin/users/${id}`),
     getAllUsers: () => api.get('/v1/api/admin/users-without-page'),
     deleteUserByUsername: (username) => api.delete(`/v1/api/admin/users/${username}`),
+    toggleEnable: (userId, status, config = {}) => api.patch(`/v1/api/admin/users/${userId}/status?status=${status}`, {}, config),
   },
 
   // POST APIs (exposed as postsAPI for backwards-compatibility with existing components)
@@ -171,68 +173,35 @@ export default {
   authAPI
 };
 
-// Create a function to set up interceptors with keycloak
-export const setupInterceptors = (keycloak) => {
+// Accept a showError callback for global error handling
+export const setupInterceptors = (keycloak, showError) => {
   // Clear any existing interceptors
   api.interceptors.request.eject();
   
   // Add request interceptor
-  const requestInterceptor = api.interceptors.request.use(
-    async (config) => {
-      // Skip auth header for public endpoints
-      const isPublic = config.url?.startsWith('/v1/api/public/') || 
-                      config.url?.startsWith('/api/public/') ||
-                      config.url?.includes('keycloak');
-      
-      if (isPublic || !keycloak?.authenticated) return config;
-
-      try {
-        // Get a fresh token if needed
-        await keycloak.updateToken(30);
+  api.interceptors.request.use(
+    config => {
+      if (keycloak?.token) {
         config.headers.Authorization = `Bearer ${keycloak.token}`;
-      } catch (error) {
-        console.error('Failed to refresh token:', error);
-        keycloak.login();
-        return Promise.reject('Failed to refresh token');
       }
-      
       return config;
     },
-    (error) => Promise.reject(error)
+    error => Promise.reject(error)
   );
 
-  // Add response interceptor
-  const responseInterceptor = api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
-      
-      // If we get a 401, try to refresh the token
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-        
-        try {
-          await keycloak.updateToken(30);
-          originalRequest.headers.Authorization = `Bearer ${keycloak.token}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
-          keycloak.login();
-          return Promise.reject(refreshError);
-        }
-      }
-      
+  // Add response interceptor for global error handling
+  api.interceptors.response.use(
+    response => response,
+    error => {
+      const apiMsg = error?.response?.data?.message || 'An error occurred';
+      if (showError) showError(apiMsg);
       return Promise.reject(error);
     }
   );
 
-  // Return cleanup function
+  // Return a cleanup function
   return () => {
-    api.interceptors.request.eject(requestInterceptor);
-    api.interceptors.response.eject(responseInterceptor);
+    api.interceptors.request.eject();
+    api.interceptors.response.eject();
   };
 };
-
-// Export individual APIs
-
-

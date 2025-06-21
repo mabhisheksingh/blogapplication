@@ -4,12 +4,13 @@ import com.blog.sharedkernel.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity {
 
@@ -19,23 +20,24 @@ public class User extends BaseEntity {
   @Column(nullable = false)
   private String firstName;
 
+  @Column(nullable = false, unique = true)
+  private String keycloakId;
+
   @Column(nullable = false)
   private String lastName;
 
   @Column(nullable = false, unique = true)
   private String username;
 
-  @Column(nullable = false)
-  private String role;
-
-  @Column(nullable = false)
-  private String password;
-
   @Column(nullable = true)
   private String age;
+
+  @Column(nullable = false)
+  private Boolean isEnabled;
 
   @Lob
   @Column(name = "profile_image", columnDefinition = "TEXT")
   @Basic(fetch = FetchType.LAZY)
+  @ToString.Exclude
   private String profileImage;
 }

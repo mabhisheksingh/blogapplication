@@ -5,6 +5,7 @@ import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.service.AdminService;
 import com.blog.auth.service.UserService;
 import com.blog.sharedkernel.dto.PagingResult;
+import com.blog.sharedkernel.utils.UserUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -62,6 +63,7 @@ public class AdminController {
   @PreAuthorize("hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<CreateUserResponse>> getAllUsers() {
     log.info("Fetching all users without pagination");
+    UserUtils.printLoggedInRealmRoles();
     List<CreateUserResponse> users = adminService.getAllUser();
     log.debug("Successfully fetched {} users", users.size());
     return ResponseEntity.ok(users);
@@ -164,6 +166,14 @@ public class AdminController {
     createUserRequest.setRole("ADMIN");
     return ResponseEntity.ok(userService.createUser(createUserRequest));
   }
+
+  //create endpoint for enable/disable user
+    @PatchMapping("/users/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Boolean> enableDisableUser(@PathVariable Long id, @RequestParam Boolean status) {
+      log.info("Attempting to enable/disable user with id: {} with status: {}",  id,status);
+      return ResponseEntity.ok(adminService.enableAndDisableUser(id,status));
+    }
 
   //  @PutMapping("/users/{id}/role")
   //  @PreAuthorize("hasRole('ADMIN')")

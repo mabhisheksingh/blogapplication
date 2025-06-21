@@ -17,10 +17,12 @@ public interface AdminService {
   CreateUserResponse createUser(CreateUserRequest request);
 
   // disable user
-  CreateUserResponse disableUser(String userId);
+  Boolean disableUser(Long userId);
 
   // enable user
-  CreateUserResponse enableUser(String userId);
+  Boolean enableUser(Long userId);
+  //enable and disable user
+  Boolean enableAndDisableUser(Long userId, Boolean isEnabled);
 
   // list all user without pagination
   List<CreateUserResponse> getAllUser();

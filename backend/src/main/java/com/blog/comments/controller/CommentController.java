@@ -46,11 +46,11 @@ public class CommentController {
           Long postId,
       @Parameter(description = "Pagination and sorting parameters") @PageableDefault(size = 10)
           Pageable pageable) {
-      log.info("GetCommentsForPost called");
-      log.debug("Retrieving comments for post with ID: {}", postId);
-      Page<ResponseCommentDTO> comments = commentService.getCommentsForPost(postId, pageable);
-      log.debug("Retrieved {} comments for post with ID: {}", comments.getContent().size(), postId);
-      return ResponseEntity.ok(comments);
+    log.info("GetCommentsForPost called");
+    log.debug("Retrieving comments for post with ID: {}", postId);
+    Page<ResponseCommentDTO> comments = commentService.getCommentsForPost(postId, pageable);
+    log.debug("Retrieved {} comments for post with ID: {}", comments.getContent().size(), postId);
+    return ResponseEntity.ok(comments);
   }
 
   @Operation(
@@ -73,14 +73,14 @@ public class CommentController {
   public ResponseEntity<ResponseCommentDTO> createComment(
       @Parameter(description = "Comment details to create", required = true) @Valid @RequestBody
           CreateCommentDTO commentDto) {
-      log.info("CreateComment called");
-      log.debug("Creating comment for post with ID: {}", commentDto.getPostId());
-      UserUtils.getLoggedInUsername().ifPresentOrElse(
-          commentDto::setAuthorUserName,
-          () -> commentDto.setAuthorUserName("anonymous")
-      );
-      UserUtils.getLoggedInEmail().ifPresentOrElse(commentDto::setAuthorEmail
-      , () -> commentDto.setAuthorEmail("anonymous@gmail.com"));
+    log.info("CreateComment called");
+    log.debug("Creating comment for post with ID: {}", commentDto.getPostId());
+    UserUtils.getLoggedInUsername()
+        .ifPresentOrElse(
+            commentDto::setAuthorUserName, () -> commentDto.setAuthorUserName("anonymous"));
+    UserUtils.getLoggedInEmail()
+        .ifPresentOrElse(
+            commentDto::setAuthorEmail, () -> commentDto.setAuthorEmail("anonymous@gmail.com"));
     ResponseCommentDTO savedComment = commentService.createComment(commentDto);
     log.debug("Comment saved with ID: {}", savedComment.getId());
     return ResponseEntity.created(URI.create("/api/comments/" + savedComment.getId()))

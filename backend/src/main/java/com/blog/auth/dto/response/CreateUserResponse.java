@@ -15,7 +15,7 @@ public class CreateUserResponse {
   private String firstName;
   private String lastName;
   private String username;
-  private String role;
+  private Boolean isEnabled;
   private String age;
   private String profileImage;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Container, Row, Col, Spinner, Alert, Tab, Tabs, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { postsAPI, setupInterceptors, authAPI } from '../services/api';
+import { postsAPI, setupInterceptors, authAPI, usersAPI } from '../services/api';
 import { useKeycloak } from '@react-keycloak/web';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -16,6 +16,14 @@ const Profile = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+    userId: '',
+    username: '',
+    firstName: '',
+    lastName: '',
+    keycloakId: '',
+    isEnabled: '',
+    age: '',
+    profileImage: ''
   });
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +93,29 @@ const Profile = () => {
       fetchUserPosts();
     }
   }, [currentUser, initialized, keycloak, fetchUserPosts]);
+
+  useEffect(() => {
+    if (!initialized || !keycloak?.authenticated) return;
+    // Always fetch user info using username from keycloak token
+    const username = keycloak.tokenParsed?.preferred_username || keycloak.tokenParsed?.username || currentUser?.username;
+    if (!username) return;
+    usersAPI.getUserByUsername(username)
+      .then(res => {
+        const user = res.data;
+        setFormData(prev => ({
+          ...prev,
+          userId: user.userId,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          keycloakId: user.keycloakId,
+          isEnabled: user.isEnabled,
+          age: user.age,
+          profileImage: user.profileImage
+        }));
+      });
+  }, [initialized, keycloak, currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -174,7 +205,6 @@ const Profile = () => {
     );
   }
 
-
   return (
     <Container className="mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -190,6 +220,27 @@ const Profile = () => {
         className="mb-4"
       >
         <Tab eventKey="profile" title="Profile">
+          <Card className="mb-4">
+            <Card.Body>
+              <Row>
+                <Col md={2} className="text-center">
+                  {formData.profileImage ? (
+                    <img src={formData.profileImage} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%' }} />
+                  ) : (
+                    <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#eee', display: 'inline-block' }} />
+                  )}
+                </Col>
+                <Col md={10}>
+                  <h5>{formData.firstName} {formData.lastName} ({formData.username})</h5>
+                  <div>Email: {formData.email}</div>
+                  <div>User ID: {formData.userId}</div>
+                  <div>Keycloak ID: {formData.keycloakId}</div>
+                  <div>Status: {formData.isEnabled ? 'Enabled' : 'Disabled'}</div>
+                  <div>Age: {formData.age ?? ''}</div>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
           <Card className="mt-3">
             <Card.Body>
               <Form onSubmit={handleProfileSubmit}>
@@ -238,7 +289,7 @@ const Profile = () => {
         <Tab eventKey="password" title="Change Password">
           <Card className="mt-3">
             <Card.Body>
-              <Form onSubmit={handlePasswordSubmit}>
+              <Form onSubmit={(e) => handleProfileSubmit(e)}>
                 <Form.Group className="mb-3" controlId="currentPassword">
                   <Form.Label>Current Password</Form.Label>
                   <Form.Control
@@ -281,7 +332,6 @@ const Profile = () => {
             </Card.Body>
           </Card>
         </Tab>
-
 
         <Tab eventKey="posts" title="My Posts">
           <Card className="mt-3">

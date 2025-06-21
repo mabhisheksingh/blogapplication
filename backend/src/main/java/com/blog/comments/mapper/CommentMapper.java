@@ -12,9 +12,7 @@ public interface CommentMapper {
   CommentMapper INSTANCE = Mappers.getMapper(CommentMapper.class);
 
   // Map from CreateCommentDTO → CommentEntity (for saving)
-  @Mappings({
-    @Mapping(target = "isEdited", constant = "false")
-  })
+  @Mappings({@Mapping(target = "isEdited", constant = "false")})
   Comment toEntity(CreateCommentDTO dto);
 
   ResponseCommentDTO toResponseDto(Comment entity);

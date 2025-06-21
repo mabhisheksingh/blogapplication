@@ -32,6 +32,10 @@ com.blog
 
 | Version | Date       | Description                                                                 |
 |---------|------------|-----------------------------------------------------------------------------|
+| v1.3.0  | 2025-06-21 | Centralized error handling, user info by username, improved docs             |
+|         |            | - Frontend: Global error modal (React Context), user profile fetch by username|
+|         |            | - Backend: GET /user/users/{username} endpoint, improved error JSON format   |
+|         |            | - Docs: API_README.md and frontend/README.md updated                        |
 | v1.2.0  | 2025-06-14 | Enhanced role-based access control and user management                    |
 |         |            | - Added role-based access control for blog endpoints                       |
 |         |            | - Implemented PublicController for user self-registration                  |

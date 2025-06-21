@@ -9,7 +9,13 @@ import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.AdminService;
 import com.blog.sharedkernel.dto.PagingResult;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+
+import com.blog.sharedkernel.exception.OperationNotPermit;
+import com.blog.sharedkernel.exception.UserNotFoundException;
+import com.blog.sharedkernel.utils.UserUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -108,26 +114,70 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   @Transactional
-  public CreateUserResponse disableUser(String userId) {
-    return null;
+  public Boolean enableUser(Long userId) {
+    log.info("enableUser called with userId: {}", userId);
+    Optional<User> user = userRepository.findById(userId);
+    User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
+    log.info("UserServiceImpl getUsername user: {}", user1.getUsername());
+    log.info("UserServiceImpl getLoggedInUsername: {}", UserUtils.getLoggedInUsername().get());
+    if(Objects.equals(UserUtils.getLoggedInUsername().get(),user1.getUsername())){
+      throw new OperationNotPermit(UserUtils.getLoggedInUsername().get(),"You can't enable yourself");
+    }
+    try{
+      user1.setIsEnabled(true);
+      String keycloakId = user1.getKeycloakId();
+      keycloakClient.enableUser(keycloakId);
+      userRepository.save(user1);
+      return true;
+    } catch (Exception e) {
+      user1.setIsEnabled(false);
+      userRepository.save(user1);
+      log.error("Error disabling user: {}", e.getMessage(), e);
+      return false;
+    }
   }
 
   @Override
   @Transactional
-  public CreateUserResponse enableUser(String userId) {
-    return null;
+  public Boolean disableUser(Long userId) {
+    log.info("disableUser called with userId: {}", userId);
+    Optional<User> user = userRepository.findById(userId);
+    User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
+    log.info("UserServiceImpl getUsername user: {}", user1.getUsername());
+    log.info("UserServiceImpl getLoggedInUsername: {}", UserUtils.getLoggedInUsername().get());
+    if(Objects.equals(UserUtils.getLoggedInUsername().get(),user1.getUsername())){
+      throw new OperationNotPermit(UserUtils.getLoggedInUsername().get(),"You can't enable yourself");
+    }
+    try{
+      user1.setIsEnabled(false);
+      String keycloakId = user1.getKeycloakId();
+      keycloakClient.disableUser(keycloakId);
+      User savedUser = userRepository.save(user1);
+      return true;
+    } catch (Exception e) {
+      user1.setIsEnabled(true);
+      userRepository.save(user1);
+      log.error("Error disabling user: {}", e.getMessage(), e);
+      return false;
+    }
+  }
+
+  @Override
+  public Boolean enableAndDisableUser(Long userId, Boolean enableUser) {
+    log.info("enableAndDisableUser called with userId: {}, isEnabled: {}", userId, enableUser ? "true" : "false");
+    return !enableUser?this.enableUser(userId):this.disableUser(userId);
   }
 
   @Override
   public List<CreateUserResponse> getAllUser() {
-    log.info("Fetching all users without pagination");
+    log.info("getAllUser called");
     try {
       List<User> users = userRepository.findAll();
-      log.debug("Fetched {} users from database", users.size());
+      log.info("Fetched {} users from database", users);
 
       List<CreateUserResponse> response =
           users.stream()
-              .peek(user -> log.trace("Processing user: {}", user.getUsername()))
+              .peek(user -> log.info("Processing user: {}", user.getId()))
               .map(userMapper::toCreateUserResponse)
               .toList();
 

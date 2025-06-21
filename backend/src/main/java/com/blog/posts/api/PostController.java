@@ -42,7 +42,6 @@ public class PostController {
       description = "Successfully retrieved list of blogs",
       content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
   @GetMapping
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<ResponsePostDTO>> getAllBlogs() {
     log.info("Fetching all postDTOS");
     List<ResponsePostDTO> postDTOS = postService.getAllPosts();

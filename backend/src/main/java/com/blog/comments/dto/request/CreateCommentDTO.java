@@ -27,10 +27,12 @@ public class CreateCommentDTO {
   @Null @JsonIgnore // ID of the person commenting
   private String authorUserName; // Name of the person commenting
   @Null @JsonIgnore private String authorEmail; // (Optional) Email of commenter
-  @Null @JsonIgnore
-  @Builder.Default
+
+  @Null @JsonIgnore @Builder.Default
   private LocalDateTime createdAt = LocalDateTime.now(); // When comment was created
-  @Builder.Default
-  @Null @JsonIgnore private LocalDateTime updatedAt = LocalDateTime.now(); // When comment was last updated
+
+  @Builder.Default @Null @JsonIgnore
+  private LocalDateTime updatedAt = LocalDateTime.now(); // When comment was last updated
+
   @Null @JsonIgnore private Boolean isEdited; // true if comment was edited
 }

@@ -177,6 +177,31 @@ Authorization: Bearer <your_jwt_token>
 }
 ```
 
+### Get User by Username
+`GET /user/users/{username}`
+
+**Description**: Retrieves a specific user by their username.
+
+**Parameters**:
+- `username` (path, required): The username of the user to retrieve
+
+**Authentication**: Required (USER, ADMIN, or ROOT role)
+
+**Response**:
+```json
+{
+  "userId": 1,
+  "keycloakId": "3cf0a441-1271-4047-974d-8069d4ed697c",
+  "email": "abhishek@gmail.com",
+  "firstName": "Abhishek",
+  "lastName": "Singh",
+  "username": "abhishek",
+  "isEnabled": true,
+  "age": null,
+  "profileImage": null
+}
+```
+
 ### Update User
 `PUT /user/users/{userId}`
 
@@ -192,6 +217,21 @@ Authorization: Bearer <your_jwt_token>
   "email": "new.email@example.com"
 }
 ```
+
+### Enable/Disable User
+`PATCH /admin/users/{userId}/status?status=true|false`
+
+**Description**: Enables or disables a user account by userId.
+
+**Authentication**: Required (ADMIN or ROOT role)
+
+**Parameters**:
+- `userId` (path, required): The user ID
+- `status` (query, required): `true` to enable, `false` to disable
+
+**Response**:
+- 200 OK on success
+- 400/403 on error (see error format below)
 
 ## Authentication
 
@@ -670,3 +710,15 @@ Deletes a user by their username. Requires ADMIN role.
 | Security Schema | Scopes |
 | --- | --- |
 | bearerAuth | |
+
+### Error Response Format
+All errors are returned in JSON format:
+```json
+{
+  "timestamp": "2025-06-21T18:17:42.15158",
+  "status": 400,
+  "error": "Bad Request",
+  "code": "OPERATION_NOT_PERMIT",
+  "message": "You can't enable yourself"
+}
+```

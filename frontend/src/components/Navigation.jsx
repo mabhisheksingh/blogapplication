@@ -3,9 +3,11 @@ import { Navbar, Nav, Container, NavDropdown, Image, Button } from 'react-bootst
 import { LinkContainer } from 'react-router-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useKeycloak } from '@react-keycloak/web';
+import { useAuth } from '../context/AuthContext'; // assuming useAuth hook is in AuthContext.js
 
 const Navigation = () => {
   const { keycloak } = useKeycloak();
+  const { currentUser } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -56,6 +58,11 @@ const Navigation = () => {
                 <Nav.Link>New Post</Nav.Link>
               </LinkContainer>
             )}
+            {keycloak.authenticated && (currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('ROOT')) && (
+              <LinkContainer to="/admin/users" onClick={closeNav}>
+                <Nav.Link>User Listing</Nav.Link>
+              </LinkContainer>
+            )}
           </Nav>
           
           <Nav>
@@ -76,6 +83,17 @@ const Navigation = () => {
                 <LinkContainer to="/profile" onClick={closeNav}>
                   <NavDropdown.Item>Profile</NavDropdown.Item>
                 </LinkContainer>
+                {/* Admin/User menu */}
+                {keycloak.authenticated && (
+                  <>
+                    {(currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('ROOT')) && (
+                      <Nav.Link as={Link} to="/admin/users">User Listing</Nav.Link>
+                    )}
+                    {(currentUser?.roles?.includes('USER') || currentUser?.roles?.includes('ADMIN')) && (
+                      <Nav.Link as={Link} to="/posts/new">Create Post</Nav.Link>
+                    )}
+                  </>
+                )}
                 <NavDropdown.Divider />
                 <NavDropdown.Item onClick={handleLogout}>
                   Logout

@@ -77,6 +77,7 @@ logging:
   level:
     org.springframework: INFO
     org.hibernate.SQL: INFO
+    org.springframework.security: debug
     org.hibernate.type.descriptor.sql.BasicBinder: INFO
     org.hibernate.type.descriptor.sql.BasicExtractor: INFO
 

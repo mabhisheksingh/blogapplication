@@ -29,13 +29,6 @@ const Posts = () => {
       } catch (err) {
         console.error('Error fetching posts:', err);
         
-        if (err.response?.status === 401) {
-          // If we get 401, the interceptor should handle token refresh
-          // If we still get here, it means refresh failed and we should redirect to login
-          keycloak.login();
-          return;
-        }
-        
         setError('Failed to fetch posts. Please try again later.');
       } finally {
         setLoading(false);

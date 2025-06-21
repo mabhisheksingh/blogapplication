@@ -4,6 +4,8 @@ import { ReactKeycloakProvider } from '@react-keycloak/web';
 import  { getKeycloakInstance } from './keycloak';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { ErrorProvider } from './context/ErrorContext';
+import GlobalErrorModal from './components/GlobalErrorModal';
 
 const container = document.getElementById('root');
 const root = createRoot(container);
@@ -24,7 +26,7 @@ const keycloakInstance = getKeycloakInstance();
 root.render(
     <ReactKeycloakProvider authClient={keycloakInstance} 
           initOptions={{
-              onLoad: 'login-required',
+              onLoad: 'check-sso',
               checkLoginIframe: false,
               pkceMethod: 'S256'
           }}
@@ -53,8 +55,11 @@ root.render(
     )}
         
         >
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <ErrorProvider>
+        <AuthProvider>
+          <App />
+          <GlobalErrorModal />
+        </AuthProvider>
+      </ErrorProvider>
     </ReactKeycloakProvider>
 );

@@ -203,10 +203,10 @@ const PostForm = ({ isEditMode = false }) => {
 
     fetchPostData();
     
-    return () => {
+   return () => {
       isMounted = false;
       if (cleanup) cleanup();
-    };
+    }; 
   }, [isEditMode, id, availableCategories, currentUser, navigate]);
 
   const handleChange = (e) => {

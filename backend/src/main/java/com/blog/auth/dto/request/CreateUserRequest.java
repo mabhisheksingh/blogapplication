@@ -33,6 +33,10 @@ public class CreateUserRequest {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
 
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @Null
+  private Boolean isEnabled;
+
   @Min(value = 1, message = "Age must be at least 1")
   @Max(value = 100, message = "Age must be at most 100")
   private Integer age;

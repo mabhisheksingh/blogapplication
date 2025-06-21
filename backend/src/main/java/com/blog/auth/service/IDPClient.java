@@ -4,6 +4,7 @@ import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.request.UpdateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
 import jakarta.annotation.Nonnull;
+import java.util.List;
 import java.util.Set;
 
 public interface IDPClient {
@@ -32,4 +33,10 @@ public interface IDPClient {
   boolean deleteUser(String userName);
 
   String getIdFromUserName(String userName);
+
+  List<CreateUserResponse> getAllUsers();
+
+  void disableUser(String userId);
+
+  void enableUser(String userId);
 }

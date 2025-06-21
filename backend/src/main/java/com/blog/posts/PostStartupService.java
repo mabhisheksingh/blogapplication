@@ -8,11 +8,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class StartupService {
+public class PostStartupService {
 
   private final CategoryRepository categoryRepository;
 
-  public StartupService(CategoryRepository categoryRepository) {
+  public PostStartupService(CategoryRepository categoryRepository) {
     this.categoryRepository = categoryRepository;
   }
 

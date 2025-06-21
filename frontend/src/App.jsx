@@ -10,6 +10,7 @@ import PostDetail from './pages/PostDetail';
 import PostForm from './pages/PostForm';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import UserList from './pages/UserList';
 
 // Protected Route Component
 const PrivateRoute = ({ children, requiredRoles = [] }) => {
@@ -67,7 +68,7 @@ function App() {
           <Route
             path="/posts/new"
             element={
-              <PrivateRoute>
+              <PrivateRoute requiredRoles={["USER", "ADMIN"]}>
                 <PostForm />
               </PrivateRoute>
             }
@@ -77,6 +78,14 @@ function App() {
             element={
               <PrivateRoute>
                 <PostForm isEditMode={true} />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <PrivateRoute requiredRoles={["ADMIN", "ROOT"]}>
+                <UserList />
               </PrivateRoute>
             }
           />

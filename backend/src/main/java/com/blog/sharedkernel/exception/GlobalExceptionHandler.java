@@ -8,6 +8,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,6 +39,14 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
   }
 
+  @ExceptionHandler(OperationNotPermit.class)
+  public ResponseEntity<ErrorResponse> handleOperationNotPermit(OperationNotPermit ex) {
+    log.error("OperationNotPermit: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+            new ErrorResponse(ex.getStatus(), ex.getErrorCode(), ex.getMessage(), ex.getArgs());
+    return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+  }
+
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
     log.error("Constraint violation: {}", ex.getMessage(), ex);
@@ -66,6 +75,15 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleRuntimeException(RuntimeException exception) {
     log.error("RuntimeException: Unexpected error occurred: {}", exception.getMessage(), exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
+  }
+
+  @ExceptionHandler(AuthorizationDeniedException.class)
+  public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(
+      AuthorizationDeniedException ex) {
+    log.error("AuthorizationDeniedException: {}", ex.getMessage(), ex);
+    ErrorResponse errorResponse =
+        new ErrorResponse(HttpStatus.FORBIDDEN, "FORBIDDEN", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
   }
 
   @ExceptionHandler({Exception.class})

@@ -22,10 +22,10 @@ public class UserController {
 
   // User related CRUD operations
 
-  @GetMapping("/users/{userId}")
+  @GetMapping("/users/{userName}")
   @Operation(summary = "Get user by ID")
-  public ResponseEntity<?> getUserById(@PathVariable Long userId) {
-    return ResponseEntity.ok(userService.getUserById(userId));
+  public ResponseEntity<?> getUserById(@PathVariable String userName) {
+    return ResponseEntity.ok(userService.getByUserName(userName));
   }
 
   @PutMapping("/users/{userId}")
