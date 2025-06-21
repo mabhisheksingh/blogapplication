@@ -27,6 +27,9 @@ public interface AdminService {
   // list all user without pagination
   List<CreateUserResponse> getAllUser();
 
+  //isSelfOrRootUser
+  Boolean isItSelfOrRootUser(String requestedUserName);
+
   // list all user with pagination
   PagingResult<CreateUserResponse> getAllUser(Pageable pageable);
 }

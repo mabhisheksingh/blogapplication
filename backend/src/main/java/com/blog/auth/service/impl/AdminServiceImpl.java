@@ -1,5 +1,6 @@
 package com.blog.auth.service.impl;
 
+import com.blog.auth.constant.APIConstant;
 import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.mapper.UserMapper;
@@ -118,10 +119,11 @@ public class AdminServiceImpl implements AdminService {
     log.info("enableUser called with userId: {}", userId);
     Optional<User> user = userRepository.findById(userId);
     User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
-    log.info("UserServiceImpl getUsername user: {}", user1.getUsername());
-    log.info("UserServiceImpl getLoggedInUsername: {}", UserUtils.getLoggedInUsername().get());
-    if(Objects.equals(UserUtils.getLoggedInUsername().get(),user1.getUsername())){
-      throw new OperationNotPermit(UserUtils.getLoggedInUsername().get(),"You can't enable yourself");
+    String loggedInUserName = UserUtils.getLoggedInUsername().orElseThrow(
+        () -> new RuntimeException("You are not logged in")
+    );
+    if(isItSelfOrRootUser(user1.getUsername())){
+      throw new OperationNotPermit(loggedInUserName,"You can't enable/disable yourself or root user");
     }
     try{
       user1.setIsEnabled(true);
@@ -143,10 +145,11 @@ public class AdminServiceImpl implements AdminService {
     log.info("disableUser called with userId: {}", userId);
     Optional<User> user = userRepository.findById(userId);
     User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
-    log.info("UserServiceImpl getUsername user: {}", user1.getUsername());
-    log.info("UserServiceImpl getLoggedInUsername: {}", UserUtils.getLoggedInUsername().get());
-    if(Objects.equals(UserUtils.getLoggedInUsername().get(),user1.getUsername())){
-      throw new OperationNotPermit(UserUtils.getLoggedInUsername().get(),"You can't enable yourself");
+    String loggedInUserName = UserUtils.getLoggedInUsername().orElseThrow(
+            () -> new RuntimeException("You are not logged in")
+    );
+    if(isItSelfOrRootUser(user1.getUsername())){
+      throw new OperationNotPermit(loggedInUserName,"You can't enable/disable yourself or root user");
     }
     try{
       user1.setIsEnabled(false);
@@ -165,7 +168,7 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public Boolean enableAndDisableUser(Long userId, Boolean enableUser) {
     log.info("enableAndDisableUser called with userId: {}, isEnabled: {}", userId, enableUser ? "true" : "false");
-    return !enableUser?this.enableUser(userId):this.disableUser(userId);
+    return enableUser?this.enableUser(userId):this.disableUser(userId);
   }
 
   @Override
@@ -188,6 +191,16 @@ public class AdminServiceImpl implements AdminService {
       log.error("Error fetching all users: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch users: " + e.getMessage(), e);
     }
+  }
+
+  @Override
+  public Boolean isItSelfOrRootUser(String requestedUserName) {
+    log.info("isItSelfOrRootUser called with requestedUserName: {}", requestedUserName);
+    String loggedInUsername = UserUtils.getLoggedInUsername().orElseThrow(
+            () -> new OperationNotPermit(requestedUserName,"Token not found")
+    );
+    return Objects.equals(loggedInUsername, requestedUserName)  ||
+            Objects.equals(requestedUserName, APIConstant.ROOT_USER_NAME);
   }
 
   @Override

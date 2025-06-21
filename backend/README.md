@@ -58,6 +58,8 @@ com.blog
 - **Modular Architecture**: Built with Spring Modulith for clear module boundaries
 - **Role-Based Access Control**: Fine-grained access control with USER and ADMIN roles
 - **User Management**: Complete user CRUD operations with role-based access control
+- **Role field**: User API now returns a `role` field for each user, used for display and access logic in frontend
+- **User listing sorting**: Users can be sorted by role and enabled status from the frontend UI
 - **Self-Registration**: Public endpoint for user registration with USER role
 - **Admin Dashboard**: Dedicated admin interface for user management
 - **Keycloak Integration**: Seamless authentication and authorization with Keycloak

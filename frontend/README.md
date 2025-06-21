@@ -5,8 +5,8 @@ This is the React frontend for the Blog Application. It interacts with a Spring 
 ## Features
 - User authentication with Keycloak
 - Role-based access control (USER, ADMIN, ROOT)
-- User listing and management (enable/disable, edit)
-- Profile page with live user info from backend
+- User listing and management (enable/disable, edit, sort by role and enabled status)
+- Profile page with live user info from backend (shows role)
 - Global error handling with modal popup
 - Modern UI with React Bootstrap
 
@@ -46,11 +46,16 @@ frontend/
 ```
 
 ## Key Files
-- `src/pages/UserList.jsx`: User listing and management
-- `src/pages/Profile.jsx`: Profile page, fetches user info by username
+- `src/pages/UserList.jsx`: User listing and management (sort by role and enabled status)
+- `src/pages/Profile.jsx`: Profile page, fetches user info by username (shows role)
 - `src/services/api.js`: API service with axios interceptors and user API methods
 - `src/context/ErrorContext.jsx`: Global error handling
 - `src/components/GlobalErrorModal.jsx`: Shows API errors in a modal
+
+## User Listing Features
+- Sort users by role and enabled status by clicking the column headers.
+- Edit button is disabled for ROOT users. Enable/Disable button is disabled for ROOT and self.
+- Role is displayed in both user listing and profile.
 
 ## Notes
 - All API errors are shown in a global modal for consistent UX.

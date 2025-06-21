@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI, setupInterceptors } from '../services/api';
 import { Button, Table, Modal, Form, Alert } from 'react-bootstrap';
@@ -44,6 +44,35 @@ const UserList = () => {
   const [editUser, setEditUser] = useState(null);
   const [modalShow, setModalShow] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
+
+  const sortedUsers = useMemo(() => {
+    let sortableUsers = [...users];
+    if (sortConfig.key) {
+      sortableUsers.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        // Special handling for isEnabled (convert to number for sorting)
+        if (sortConfig.key === 'isEnabled') {
+          aValue = aValue === true || aValue === 'true' ? 1 : 0;
+          bValue = bValue === true || bValue === 'true' ? 1 : 0;
+        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableUsers;
+  }, [users, sortConfig]);
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
 
   useEffect(() => {
     if (!initialized || !keycloak?.token) return;
@@ -94,7 +123,12 @@ const UserList = () => {
             <th>First Name</th>
             <th>Last Name</th>
             <th>Username</th>
-            <th>Enabled</th>
+            <th onClick={() => handleSort('role')} style={{cursor: 'pointer'}}>
+              Role {sortConfig.key === 'role' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+            </th>
+            <th onClick={() => handleSort('isEnabled')} style={{cursor: 'pointer'}}>
+              Enabled {sortConfig.key === 'isEnabled' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+            </th>
             <th>Age</th>
             <th>Profile Image</th>
             <th>Edit</th>
@@ -102,7 +136,7 @@ const UserList = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {sortedUsers.map(user => (
             <tr key={user.userId}>
               <td>{user.userId}</td>
               <td>{user.keycloakId}</td>
@@ -110,15 +144,33 @@ const UserList = () => {
               <td>{user.firstName}</td>
               <td>{user.lastName}</td>
               <td>{user.username}</td>
-              <td>{user.isEnabled ? 'Yes' : 'No'}</td>
+              <td>{user.role}</td>
+              <td>{user.isEnabled === true || user.isEnabled === "true" ? 'Yes' : 'No'}</td>
               <td>{user.age ?? ''}</td>
               <td>{user.profileImage ? <img src={user.profileImage} alt="profile" style={{width:32,height:32,borderRadius:'50%'}} /> : ''}</td>
               <td>
-                <Button size="sm" variant="secondary" onClick={() => handleEdit(user)} className="me-2">Edit</Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleEdit(user)}
+                  className="me-2"
+                  disabled={user.role === 'ROOT'}
+                >
+                  Edit
+                </Button>
               </td>
               <td>
-                <Button size="sm" variant={user.isEnabled ? 'danger' : 'success'} disabled={actionLoading[user.userId]} onClick={() => handleToggleEnable(user)}>
-                  {actionLoading[user.userId] ? '...' : user.isEnabled ? 'Disable' : 'Enable'}
+                <Button
+                  size="sm"
+                  variant={user.isEnabled === true || user.isEnabled === "true" ? 'success':'danger'}
+                  disabled={actionLoading[user.userId] || user.username === currentUser.username || user.role === 'ROOT'}
+                  onClick={() => handleToggleEnable(user)}
+                >
+                  {actionLoading[user.userId]
+                    ? '...'
+                    : user.isEnabled === true || user.isEnabled === "true"
+                      ? 'Enable'
+                      : 'Disable'}
                 </Button>
               </td>
             </tr>

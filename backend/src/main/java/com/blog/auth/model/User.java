@@ -33,6 +33,9 @@ public class User extends BaseEntity {
   private String age;
 
   @Column(nullable = false)
+  private String role;
+
+  @Column(nullable = false)
   private Boolean isEnabled;
 
   @Lob

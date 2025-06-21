@@ -23,7 +23,8 @@ const Profile = () => {
     keycloakId: '',
     isEnabled: '',
     age: '',
-    profileImage: ''
+    profileImage: '',
+    role: ''
   });
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +88,7 @@ const Profile = () => {
         name: currentUser.name || '',
         email: currentUser.email || '',
         bio: currentUser.bio || '',
+        role: currentUser.role || '',
         // Don't reset passwords to avoid losing input
       }));
       
@@ -112,7 +114,8 @@ const Profile = () => {
           keycloakId: user.keycloakId,
           isEnabled: user.isEnabled,
           age: user.age,
-          profileImage: user.profileImage
+          profileImage: user.profileImage,
+          role: user.role
         }));
       });
   }, [initialized, keycloak, currentUser]);
@@ -237,6 +240,7 @@ const Profile = () => {
                   <div>Keycloak ID: {formData.keycloakId}</div>
                   <div>Status: {formData.isEnabled ? 'Enabled' : 'Disabled'}</div>
                   <div>Age: {formData.age ?? ''}</div>
+                  <div>Role: {formData.role}</div>
                 </Col>
               </Row>
             </Card.Body>

@@ -1,5 +1,6 @@
 package com.blog.auth.service.impl;
 
+import com.blog.auth.constant.APIConstant;
 import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.request.UpdateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
@@ -226,6 +227,19 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
                     .username(u.getUsername())
                     .keycloakId(u.getId())
                         .isEnabled(u.isEnabled())
+                        .role(
+                                keycloak
+                                .realm(idpConfigProperties.getRealm())
+                                        .users().get(u.getId())
+                                        .roles()
+                                        .realmLevel()
+                                        .listEffective()
+                                        .stream()
+                                        .map(RoleRepresentation::getName)
+                                        .filter(APIConstant.ALLOWED_ROLES::contains)
+                                        .findFirst().orElse(APIConstant.ROLE_NOT_FOUND)
+                                )
+
                     .build())
         .toList();
   }

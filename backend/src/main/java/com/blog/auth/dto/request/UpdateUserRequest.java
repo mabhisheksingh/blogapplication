@@ -12,5 +12,7 @@ public class UpdateUserRequest {
   private String firstName;
   private String lastName;
   private String age;
+  private Boolean isEnabled;
+  private String role;
   private String profileImage;
 }
