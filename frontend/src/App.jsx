@@ -11,6 +11,8 @@ import PostForm from './pages/PostForm';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import UserList from './pages/UserList';
+import Register from './pages/Register';
+import Login from './pages/Login';
 
 // Protected Route Component
 const PrivateRoute = ({ children, requiredRoles = [] }) => {
@@ -97,6 +99,8 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Container>

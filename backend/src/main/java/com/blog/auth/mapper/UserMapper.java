@@ -1,6 +1,7 @@
 package com.blog.auth.mapper;
 
 import com.blog.auth.dto.request.CreateUserRequest;
+import com.blog.auth.dto.request.UpdateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.model.User;
 import java.util.Base64;
@@ -14,6 +15,9 @@ public interface UserMapper {
       @Mapping(target = "userId", source = "id")
   })
   CreateUserResponse toCreateUserResponse(User user);
+
+  User toUser(UpdateUserRequest updateUserRequest);
+
 
   CreateUserResponse toCreateUserResponse(CreateUserRequest createUserRequest);
 

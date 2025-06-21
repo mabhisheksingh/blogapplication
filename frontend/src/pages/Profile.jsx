@@ -31,6 +31,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [profileImageChanged, setProfileImageChanged] = useState(false);
   const navigate = useNavigate();
 
   // Set up API interceptors when component mounts
@@ -198,6 +199,50 @@ const Profile = () => {
     }
   };
 
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setError('Only JPG and PNG formats are allowed.');
+      return;
+    }
+    if (file.size > 512000) {
+      setError('File size must be under 500KB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, profileImage: reader.result }));
+      setSuccess('Profile image updated (not yet saved to server).');
+      setProfileImageChanged(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfileImage = async () => {
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      // Always send all profile fields, using updated values or defaults
+      const updateData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        age: formData.age,
+        isEnabled: formData.isEnabled,
+        role: formData.role,
+        profileImage: formData.profileImage
+      };
+      await usersAPI.updateUser(formData.userId, updateData);
+      setSuccess('Profile image saved successfully!');
+      setProfileImageChanged(false);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to save profile image');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!currentUser) {
     return (
       <Container className="mt-5 text-center">
@@ -223,7 +268,7 @@ const Profile = () => {
         className="mb-4"
       >
         <Tab eventKey="profile" title="Profile">
-          <Card className="mb-4">
+          <Card className="mb-4 position-relative">
             <Card.Body>
               <Row>
                 <Col md={2} className="text-center">
@@ -232,6 +277,12 @@ const Profile = () => {
                   ) : (
                     <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#eee', display: 'inline-block' }} />
                   )}
+                  <Form className="mt-3">
+                    <Form.Group>
+                      <Form.Label visuallyHidden>Upload Profile Image</Form.Label>
+                      <Form.Control type="file" accept="image/jpeg,image/png" onChange={handleProfileImageChange} />
+                    </Form.Group>
+                  </Form>
                 </Col>
                 <Col md={10}>
                   <h5>{formData.firstName} {formData.lastName} ({formData.username})</h5>
@@ -243,49 +294,13 @@ const Profile = () => {
                   <div>Role: {formData.role}</div>
                 </Col>
               </Row>
-            </Card.Body>
-          </Card>
-          <Card className="mt-3">
-            <Card.Body>
-              <Form onSubmit={handleProfileSubmit}>
-                <Form.Group className="mb-3" controlId="name">
-                  <Form.Label>Full Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="email">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={formData.email}
-                    disabled
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="bio">
-                  <Form.Label>Bio</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Tell us about yourself..."
-                  />
-                </Form.Group>
-
-                <div className="d-flex justify-content-end">
-                  <Button variant="primary" type="submit" disabled={saving}>
-                    {saving ? 'Saving...' : 'Save Changes'}
+              {profileImageChanged && (
+                <div style={{ position: 'absolute', right: 30, bottom: 30, zIndex: 10 }}>
+                  <Button variant="primary" onClick={handleSaveProfileImage} disabled={saving}>
+                    {saving ? 'Saving...' : 'Save'}
                   </Button>
                 </div>
-              </Form>
+              )}
             </Card.Body>
           </Card>
         </Tab>

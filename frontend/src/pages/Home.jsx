@@ -22,6 +22,11 @@ const Home = () => {
               Create New Post
             </Button>
           )}
+          {!keycloak.authenticated && (
+            <Button as={Link} to="/register" variant="outline-primary" className="ms-3">
+              Register
+            </Button>
+          )}
         </div>
       </Container>
       
