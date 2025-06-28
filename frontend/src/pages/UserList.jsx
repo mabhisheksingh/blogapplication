@@ -4,45 +4,15 @@ import { usersAPI, setupInterceptors } from '../services/api';
 import { Button, Table, Modal, Form, Alert } from 'react-bootstrap';
 import { useKeycloak } from '@react-keycloak/web';
 import { useError } from '../context/ErrorContext';
-
-const UserEditModal = ({ show, handleClose, user, onSave }) => {
-  const [form, setForm] = useState(user || {});
-  return (
-    <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton><Modal.Title>Edit User</Modal.Title></Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Username</Form.Label>
-            <Form.Control value={form.username || ''} disabled />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <Form.Control value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Roles</Form.Label>
-            <Form.Control value={form.roles ? form.roles.join(', ') : ''} onChange={e => setForm(f => ({ ...f, roles: e.target.value.split(',').map(r => r.trim()) }))} />
-            <Form.Text>Comma separated (e.g. USER, ADMIN)</Form.Text>
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-        <Button variant="primary" onClick={() => onSave(form)}>Save</Button>
-      </Modal.Footer>
-    </Modal>
-  );
-};
+import { useNavigate } from 'react-router-dom';
 
 const UserList = () => {
   const { currentUser } = useAuth();
   const { keycloak, initialized } = useKeycloak();
   const { showError } = useError();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editUser, setEditUser] = useState(null);
-  const [modalShow, setModalShow] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: '', direction: 'asc' });
 
@@ -52,8 +22,8 @@ const UserList = () => {
       sortableUsers.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-        // Special handling for isEnabled (convert to number for sorting)
-        if (sortConfig.key === 'isEnabled') {
+        // Special handling for isEmailVerified (convert to number for sorting)
+        if (sortConfig.key === 'isEmailVerified') {
           aValue = aValue === true || aValue === 'true' ? 1 : 0;
           bValue = bValue === true || bValue === 'true' ? 1 : 0;
         }
@@ -86,21 +56,37 @@ const UserList = () => {
     return () => { if (cleanup) cleanup(); };
   }, [initialized, keycloak, showError]);
 
-  const handleEdit = user => {
-    setEditUser(user);
-    setModalShow(true);
-  };
-  const handleSave = async (user) => {
-    await usersAPI.updateUser(user.userId || user.username, user, { headers: { Authorization: `Bearer ${keycloak.token}` } });
-    setUsers(users.map(u => (u.userId === user.userId ? user : u)));
-    setModalShow(false);
-  };
-
   const handleToggleEnable = async (user) => {
     setActionLoading(al => ({ ...al, [user.userId]: true }));
     try {
       await usersAPI.toggleEnable(user.userId, !user.isEnabled, { headers: { Authorization: `Bearer ${keycloak.token}` } });
       setUsers(users.map(u => u.userId === user.userId ? { ...u, isEnabled: !u.isEnabled } : u));
+    } finally {
+      setActionLoading(al => ({ ...al, [user.userId]: false }));
+    }
+  };
+
+  const handleDelete = async (user) => {
+    if(window.confirm(`Are you sure you want to delete user '${user.username}'?`)) {
+      setActionLoading(al => ({ ...al, [user.userId]: true }));
+      try {
+        await usersAPI.deleteUserByUsername(user.username, { headers: { Authorization: `Bearer ${keycloak.token}` } });
+        setUsers(users.filter(u => u.userId !== user.userId));
+      } catch (err) {
+        showError?.('Failed to delete user.');
+      } finally {
+        setActionLoading(al => ({ ...al, [user.userId]: false }));
+      }
+    }
+  };
+
+  const handleResendVerification = async (user) => {
+    setActionLoading(al => ({ ...al, [user.userId]: true }));
+    try {
+      await usersAPI.resendVerificationEmail(user.username, { headers: { Authorization: `Bearer ${keycloak.token}` } });
+      alert('Verification email resent!');
+    } catch (err) {
+      showError?.('Failed to resend verification email.');
     } finally {
       setActionLoading(al => ({ ...al, [user.userId]: false }));
     }
@@ -114,6 +100,15 @@ const UserList = () => {
   return (
     <div>
       <h2>User Listing</h2>
+      {(currentUser?.roles?.includes('ADMIN') || currentUser?.roles?.includes('ROOT')) && (
+        <Button
+          variant="primary"
+          className="mb-3"
+          onClick={() => navigate('/register')}
+        >
+          Register New User
+        </Button>
+      )}
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -126,13 +121,13 @@ const UserList = () => {
             <th onClick={() => handleSort('role')} style={{cursor: 'pointer'}}>
               Role {sortConfig.key === 'role' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
             </th>
-            <th onClick={() => handleSort('isEnabled')} style={{cursor: 'pointer'}}>
-              Enabled {sortConfig.key === 'isEnabled' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+            <th onClick={() => handleSort('isEmailVerified')} style={{cursor: 'pointer'}}>
+              Email Verified {sortConfig.key === 'isEmailVerified' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
             </th>
             <th>Age</th>
             <th>Profile Image</th>
-            <th>Edit</th>
             <th>Enable/Disable</th>
+            <th>Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -145,20 +140,34 @@ const UserList = () => {
               <td>{user.lastName}</td>
               <td>{user.username}</td>
               <td>{user.role}</td>
-              <td>{user.isEnabled === true || user.isEnabled === "true" ? 'Yes' : 'No'}</td>
-              <td>{user.age ?? ''}</td>
-              <td>{user.profileImage ? <img src={user.profileImage} alt="profile" style={{width:32,height:32,borderRadius:'50%'}} /> : ''}</td>
               <td>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleEdit(user)}
-                  className="me-2"
-                  disabled={user.role === 'ROOT'}
-                >
-                  Edit
-                </Button>
+                {user.isEmailVerified === true || user.isEmailVerified === "true" ? (
+                  <Button size="sm" variant="success" disabled style={{cursor: 'default'}}>
+                    Verified
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="warning" onClick={() => handleResendVerification(user)} disabled={actionLoading[user.userId]}>
+                    Verify Email
+                  </Button>
+                )}
               </td>
+              <td>{user.age ?? ''}</td>
+              <td>{user.profileImage ? (
+                (() => {
+                  let src = user.profileImage;
+                  // If already a data URL, use as is
+                  if (src.startsWith('data:image/')) return <img src={src} alt="profile" style={{width:32,height:32,borderRadius:'50%'}} />;
+                  // Try to decode base64 as a data URL string
+                  try {
+                    const decoded = atob(src);
+                    if (decoded.startsWith('data:image/')) {
+                      return <img src={decoded} alt="profile" style={{width:32,height:32,borderRadius:'50%'}} />;
+                    }
+                  } catch (e) {}
+                  // Otherwise treat as raw image data
+                  return <img src={`data:image/jpeg;base64,${src}`} alt="profile" style={{width:32,height:32,borderRadius:'50%'}} />;
+                })()
+              ) : ''}</td>
               <td>
                 <Button
                   size="sm"
@@ -173,11 +182,20 @@ const UserList = () => {
                       : 'Disable'}
                 </Button>
               </td>
+              <td>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  disabled={user.role === 'ROOT' || user.username === currentUser.username || !(currentUser.roles?.includes('ADMIN') || currentUser.roles?.includes('ROOT'))}
+                  onClick={() => handleDelete(user)}
+                >
+                  Delete
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <UserEditModal show={modalShow} handleClose={() => setModalShow(false)} user={editUser} onSave={handleSave} />
     </div>
   );
 };

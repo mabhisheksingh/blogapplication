@@ -32,6 +32,7 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [profileImageChanged, setProfileImageChanged] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   // Set up API interceptors when component mounts
@@ -243,6 +244,10 @@ const Profile = () => {
     }
   };
 
+  const filteredPosts = userPosts.filter(post =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!currentUser) {
     return (
       <Container className="mt-5 text-center">
@@ -355,13 +360,22 @@ const Profile = () => {
         <Tab eventKey="posts" title="My Posts">
           <Card className="mt-3">
             <Card.Body>
+              {/* Search Bar for Posts */}
+              <Form className="mb-3">
+                <Form.Control
+                  type="text"
+                  placeholder="Search my posts..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </Form>
               {loading ? (
                 <div className="text-center my-4">
                   <Spinner animation="border" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </Spinner>
                 </div>
-              ) : userPosts.length === 0 ? (
+              ) : filteredPosts.length === 0 ? (
                 <div className="text-center py-4">
                   <p>You haven't written any posts yet.</p>
                   <Button href="/posts/new" variant="primary">
@@ -370,7 +384,7 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="list-group">
-                  {userPosts.map((post) => (
+                  {filteredPosts.map((post) => (
                     <div key={post.id} className="list-group-item">
                       <div className="d-flex justify-content-between align-items-center">
                         <div>

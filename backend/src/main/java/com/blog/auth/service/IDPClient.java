@@ -11,8 +11,8 @@ public interface IDPClient {
 
   String getIDPName();
 
-  // create user
-  //  CreateUserResponse createUser(CreateUserRequest request);
+   //resend email
+  void resendEmail(String userName);
 
   // create user with group
   CreateUserResponse createUser(CreateUserRequest request, Set<String> userGroup);

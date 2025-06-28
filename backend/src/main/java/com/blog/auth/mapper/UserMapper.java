@@ -23,6 +23,7 @@ public interface UserMapper {
 
   @Mapping(target = "profileImage", source = "profileImage", qualifiedByName = "stringToByteArray")
   @Mapping(target = "isEnabled",defaultValue = "true")
+  @Mapping(target = "isEmailVerified",defaultValue = "false")
   User toUser(CreateUserRequest createUserRequest);
 
   @Mapping(target = "profileImage", source = "profileImage", qualifiedByName = "stringToByteArray")

@@ -28,6 +28,7 @@ const createApiMethods = (api) => ({
     getAllUsers: () => api.get('/v1/api/admin/users-without-page'),
     deleteUserByUsername: (username) => api.delete(`/v1/api/admin/users/${username}`),
     toggleEnable: (userId, status, config = {}) => api.patch(`/v1/api/admin/users/${userId}/status?status=${status}`, {}, config),
+    resendVerificationEmail: (username, config = {}) => api.get(`/v1/api/admin/users/${username}/resend-email`, config),
   },
 
   // POST APIs (exposed as postsAPI for backwards-compatibility with existing components)

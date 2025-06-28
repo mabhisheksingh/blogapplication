@@ -19,4 +19,5 @@ public class CreateUserResponse {
   private Boolean isEnabled;
   private String age;
   private String profileImage;
+  private Boolean isEmailVerified;
 }

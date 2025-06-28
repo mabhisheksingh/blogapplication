@@ -32,10 +32,10 @@
   "registrationAllowed" : false,
   "registrationEmailAsUsername" : false,
   "rememberMe" : false,
-  "verifyEmail" : false,
+  "verifyEmail" : true,
   "loginWithEmailAllowed" : true,
   "duplicateEmailsAllowed" : false,
-  "resetPasswordAllowed" : false,
+  "resetPasswordAllowed" : true,
   "editUsernameAllowed" : false,
   "bruteForceProtected" : false,
   "permanentLockout" : false,
@@ -403,82 +403,98 @@
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
-  "users" : [
-
-    {
-      "id" : "3cf0a441-1271-4047-974d-8069d4ed697c",
-      "username" : "abhishek",
-      "firstName" : "Abhishek",
-      "lastName" : "Singh",
-      "email" : "abhishek@gmail.com",
-      "emailVerified" : true,
-      "createdTimestamp" : 1750488837414,
-      "enabled" : true,
-      "totp" : false,
-      "credentials" : [ {
-        "id" : "55bf75cf-4259-4f9d-8c9f-0d51329e5933",
-        "type" : "password",
-        "userLabel" : "My password",
-        "createdDate" : 1750488857011,
-        "secretData" : "{\"value\":\"STUO9F7dAL2i6xr+jCZenxLKUFiABbdxMeSbLdx0Z6A=\",\"salt\":\"zgqgIFPrAqcTekclyWjg7w==\",\"additionalParameters\":{}}",
-        "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-      } ],
-      "disableableCredentialTypes" : [ ],
-      "requiredActions" : [ ],
-      "realmRoles" : [ "default-roles-fusion-master", "USER" ],
-      "notBefore" : 0,
-      "groups" : [ ]
-    },
-    {
-      "id" : "8c73355b-6aca-4b11-802a-83f9e9bd1aca",
-      "username" : "admin",
-      "firstName" : "Admin",
-      "lastName" : "Singh",
-      "email" : "admin@gmail.com",
-      "emailVerified" : true,
-      "createdTimestamp" : 1750488789733,
-      "enabled" : true,
-      "totp" : false,
-      "credentials" : [ {
-        "id" : "9272a1fd-18e1-4c52-ac87-17d57fd39c5f",
-        "type" : "password",
-        "userLabel" : "My password",
-        "createdDate" : 1750488799743,
-        "secretData" : "{\"value\":\"l5bkk4AKbM8BwBXB+RuCnq6dFKlgW8crRZm4IOwKX6o=\",\"salt\":\"DSSYNV9yZYLWtvGZ4PR31Q==\",\"additionalParameters\":{}}",
-        "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-      } ],
-      "disableableCredentialTypes" : [ ],
-      "requiredActions" : [ ],
-      "realmRoles" : [ "default-roles-fusion-master", "ADMIN" ],
-      "notBefore" : 0,
-      "groups" : [ ]
-    },
-    {
-      "id" : "74a7e1f9-ee02-48d7-a703-7f74da5d16dd",
-      "username" : "root",
-      "firstName" : "root",
-      "lastName" : "root",
-      "email" : "abhishekit13006@gmail.com",
-      "emailVerified" : true,
-      "createdTimestamp" : 1749380466577,
-      "enabled" : true,
-      "totp" : false,
-      "credentials" : [ {
-        "id" : "342c99f6-1c5c-49cd-9e5b-dd64adc49c6e",
-        "type" : "password",
-        "userLabel" : "My password",
-        "createdDate" : 1749400988633,
-        "secretData" : "{\"value\":\"+CkHNt8woohB8tVkZ/z8CcG2EYsNDQuh4LfS+w4nmQ4=\",\"salt\":\"0LJcOuf8xGhdnuVSXz+hvg==\",\"additionalParameters\":{}}",
-        "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-      } ],
-      "disableableCredentialTypes" : [ ],
-      "requiredActions" : [ ],
-      "realmRoles" : [ "default-roles-fusion-master", "ROOT" ],
-      "notBefore" : 0,
-      "groups" : [ ]
-    },
-
-    {
+  "users" : [ {
+    "id" : "3cf0a441-1271-4047-974d-8069d4ed697c",
+    "username" : "abhishek",
+    "firstName" : "Abhishek",
+    "lastName" : "Singh",
+    "email" : "abhishek@gmail.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1750488837414,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "55bf75cf-4259-4f9d-8c9f-0d51329e5933",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1750488857011,
+      "secretData" : "{\"value\":\"STUO9F7dAL2i6xr+jCZenxLKUFiABbdxMeSbLdx0Z6A=\",\"salt\":\"zgqgIFPrAqcTekclyWjg7w==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fusion-master", "USER" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "8c73355b-6aca-4b11-802a-83f9e9bd1aca",
+    "username" : "admin",
+    "firstName" : "Admin",
+    "lastName" : "Singh",
+    "email" : "admin@gmail.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1750488789733,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "9272a1fd-18e1-4c52-ac87-17d57fd39c5f",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1750488799743,
+      "secretData" : "{\"value\":\"l5bkk4AKbM8BwBXB+RuCnq6dFKlgW8crRZm4IOwKX6o=\",\"salt\":\"DSSYNV9yZYLWtvGZ4PR31Q==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fusion-master", "ADMIN" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "c14edaf7-4ffa-4415-b255-fd48afedd11a",
+    "username" : "fusion",
+    "firstName" : "Abhi",
+    "lastName" : "Singh",
+    "email" : "abhishekit13006+phind@gmail.com",
+    "emailVerified" : false,
+    "createdTimestamp" : 1751091471469,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "a479b379-5abc-4829-8336-3ce4651f6815",
+      "type" : "password",
+      "createdDate" : 1751091471504,
+      "secretData" : "{\"value\":\"MzWkHGlo0ZEykUZUDmDui7nbfcOafqjoPd7apyOHOr4=\",\"salt\":\"6Sb5sUfnI88Nb8vC2WwBGg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ "VERIFY_EMAIL" ],
+    "realmRoles" : [ "default-roles-fusion-master", "USER" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "74a7e1f9-ee02-48d7-a703-7f74da5d16dd",
+    "username" : "root",
+    "firstName" : "root",
+    "lastName" : "root",
+    "email" : "abhishekit13006@gmail.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1749380466577,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "342c99f6-1c5c-49cd-9e5b-dd64adc49c6e",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1749400988633,
+      "secretData" : "{\"value\":\"+CkHNt8woohB8tVkZ/z8CcG2EYsNDQuh4LfS+w4nmQ4=\",\"salt\":\"0LJcOuf8xGhdnuVSXz+hvg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-fusion-master", "ROOT" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
     "id" : "d2f42f02-e99d-43fb-908e-ab2ace930b90",
     "username" : "service-account-blog-auth-private",
     "emailVerified" : false,
@@ -496,8 +512,6 @@
     "notBefore" : 0,
     "groups" : [ ]
   } ],
-
-
   "scopeMappings" : [ {
     "clientScope" : "offline_access",
     "roles" : [ "offline_access" ]
@@ -1424,7 +1438,24 @@
     "xXSSProtection" : "1; mode=block",
     "strictTransportSecurity" : "max-age=31536000; includeSubDomains"
   },
-  "smtpServer" : { },
+  "smtpServer" : {
+    "password" : "vudv vnqf mioe xyjk",
+    "replyToDisplayName" : "AAA",
+    "starttls" : "true",
+    "auth" : "true",
+    "port" : "587",
+    "host" : "smtp.gmail.com",
+    "replyTo" : "no-reply@gmail.com",
+    "from" : "abhishekkumar21496@gmail.com",
+    "fromDisplayName" : "Abhishek",
+    "envelopeFrom" : "AA",
+    "ssl" : "false",
+    "user" : "abhishekkumar21496"
+  },
+  "loginTheme" : "",
+  "accountTheme" : "",
+  "adminTheme" : "",
+  "emailTheme" : "keycloak-theme",
   "eventsEnabled" : false,
   "eventsListeners" : [ "jboss-logging" ],
   "enabledEventTypes" : [ ],
@@ -1449,7 +1480,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "oidc-usermodel-attribute-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "saml-user-property-mapper" ]
       }
     }, {
       "id" : "c591382b-b4b2-47f1-a8df-6fceb8dd004c",
@@ -1500,7 +1531,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-full-name-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-role-list-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper" ]
       }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {

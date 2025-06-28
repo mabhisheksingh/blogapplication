@@ -38,6 +38,9 @@ public class User extends BaseEntity {
   @Column(nullable = false)
   private Boolean isEnabled;
 
+  @Column(nullable = false)
+  private Boolean isEmailVerified;
+
   @Lob
   @Column(name = "profile_image", columnDefinition = "TEXT")
   @Basic(fetch = FetchType.LAZY)

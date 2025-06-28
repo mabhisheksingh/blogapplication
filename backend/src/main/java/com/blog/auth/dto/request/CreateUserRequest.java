@@ -37,6 +37,10 @@ public class CreateUserRequest {
   @Null
   private Boolean isEnabled;
 
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  @Null
+  private Boolean isEmailVerified;
+
   @Min(value = 1, message = "Age must be at least 1")
   @Max(value = 100, message = "Age must be at most 100")
   private Integer age;

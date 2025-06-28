@@ -68,6 +68,51 @@ com.blog
 - **OpenAPI Documentation**: Auto-generated API documentation with Swagger UI
 - **Comprehensive Exception Handling**: Consistent error responses with proper HTTP status codes
 
+## Email Verification & Custom Keycloak Theme
+
+- **UI & API Changes:**
+  - User listing page now shows email verification status ("Verified" or "Verify Email" button)
+  - Admins can resend verification emails from the UI
+  - Backend exposes `GET /v1/api/admin/users/{username}/resend-email` for this purpose
+
+- **Keycloak Theme:**
+  - Place your theme in `backend/data/keycloak-theme/`
+  - Includes branded HTML/text templates, CSS, images, and dummy JS
+  - Add images in `img/` folder (e.g., `blog-logo.jpg`, `blog-community.jpg`)
+  - Volume mapping in Docker Compose:
+    ```yaml
+    - ./data/keycloak-theme:/opt/keycloak/themes/keycloak-theme
+    ```
+  - Restart Keycloak container after updates
+  - Set the email theme in Keycloak admin console
+
+## UI, Backend, and Keycloak Theme Changes and Deployment Steps
+
+### UI Changes
+
+- User listing page now shows email verification status
+- Admins can resend verification emails from the UI
+
+### Backend Changes
+
+- Exposes `GET /v1/api/admin/users/{username}/resend-email` for resending verification emails
+
+### Keycloak Theme Changes
+
+- Place your theme in `backend/data/keycloak-theme/`
+- Includes branded HTML/text templates, CSS, images, and dummy JS
+- Add images in `img/` folder (e.g., `blog-logo.jpg`, `blog-community.jpg`)
+
+### Deployment Steps
+
+1. Update your theme in `backend/data/keycloak-theme/`
+2. Ensure Docker Compose has the volume mapping:
+   ```yaml
+   - ./data/keycloak-theme:/opt/keycloak/themes/keycloak-theme
+   ```
+3. Restart Keycloak container
+4. Set the email theme in Keycloak admin console
+
 ## Prerequisites
 
 - Java 17 or higher

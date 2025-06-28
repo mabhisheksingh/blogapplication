@@ -18,6 +18,7 @@ Authorization: Bearer <your_jwt_token>
 - [Categories API](#categories-api)
 - [User Management](#user-management)
 - [Authentication](#authentication)
+- [User Email Verification & Keycloak Theme](#user-email-verification--keycloak-theme)
 
 ## Posts API
 
@@ -711,6 +712,30 @@ Deletes a user by their username. Requires ADMIN role.
 | --- | --- |
 | bearerAuth | |
 
+### User Email Verification & Keycloak Theme
+
+### Resend Verification Email
+`GET /v1/api/admin/users/{username}/resend-email`
+
+**Description:**
+Resends the email verification link for the specified user. Requires admin or root privileges.
+
+**Authentication:**
+Bearer token (ADMIN/ROOT)
+
+**Response:**
+HTTP 200 OK if sent, error otherwise.
+
+---
+
+### Custom Keycloak Email Theme
+- Theme location: `backend/data/keycloak-theme/`
+- Contains HTML and plain text templates for verification, update confirmation, and test emails
+- Custom CSS, images (e.g., `blog-logo.jpg`, `blog-community.jpg`), and dummy JS included for branding and extensibility
+- Docker Compose mounts this folder to `/opt/keycloak/themes/keycloak-theme` in the Keycloak container
+- See backend README for deployment steps
+
+---
 ### Error Response Format
 All errors are returned in JSON format:
 ```json

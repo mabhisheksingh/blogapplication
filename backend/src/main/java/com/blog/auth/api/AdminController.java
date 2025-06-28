@@ -148,16 +148,17 @@ public class AdminController {
         @ApiResponse(responseCode = "404", description = "User not found")
       })
   @DeleteMapping("/users/{userName}")
-  @PreAuthorize("hasRole('ROOT')")
+  @PreAuthorize("hasRole('ROOT') or hasRole('ADMIN')")
   public ResponseEntity<Void> deleteUser(
       @Parameter(
               description = "Username of the user to be deleted",
               required = true,
-              example = "john.doe")
+              example = "abhishek")
           @PathVariable
           String userName) {
     log.info("Attempting to delete user with username: {}", userName);
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<Void>build();
+    this.adminService.deleteUser(userName);
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
   @PostMapping("/create-user")
@@ -175,13 +176,16 @@ public class AdminController {
       return ResponseEntity.ok(adminService.enableAndDisableUser(id,status));
     }
 
-  //  @PutMapping("/users/{id}/role")
-  //  @PreAuthorize("hasRole('ADMIN')")
-  //  public ResponseEntity<CreateUserResponse> updateUserRole(
-  //          @PathVariable Long id,
-  //          @RequestParam String role) {
-  //    return ResponseEntity.ok(userService.updateUserRole(id, role));
-  //  }
+    @GetMapping ("/users/{userName}/resend-email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> resendEmail(@PathVariable String userName) {
+      log.info("Attempting to resend email for user with username: {}", userName);
+      adminService.resendEmail(userName);
+      return ResponseEntity.ok().build();
+    }
+
+
+
   //  @GetMapping("/posts")
   //  @PreAuthorize("hasRole('ADMIN')")
   //  public ResponseEntity<Page<PostDto>> getAllPosts(Pageable pageable) {

@@ -3,12 +3,26 @@
 This is the React frontend for the Blog Application. It interacts with a Spring Boot backend secured by Keycloak.
 
 ## Features
-- User authentication with Keycloak
+- User authentication with Keycloak (login, logout, registration)
 - Role-based access control (USER, ADMIN, ROOT)
-- User listing and management (enable/disable, edit, sort by role and enabled status)
-- Profile page with live user info from backend (shows role)
-- Global error handling with modal popup
+- User listing and management:
+  - View all users with sorting (by role, enabled status, email verification)
+  - Enable/disable users (with permission checks)
+  - Delete users (with confirmation)
+  - View and sort by email verification status
+  - Resend email verification (admin only)
+  - Visual status: green "Verified" or yellow "Verify Email" button
+- Profile page:
+  - View and edit profile details (name, email, bio, profile image, age)
+  - Change password
+  - View own posts
+- Registration page:
+  - Custom registration form with validation (email, password, age, profile image upload)
+  - JPG/PNG profile image upload with size/type validation
 - Modern UI with React Bootstrap
+- Global error handling with modal popup
+- Loading and error states for all major actions
+- Responsive design for desktop and mobile
 
 ## Getting Started
 
@@ -52,10 +66,15 @@ frontend/
 - `src/context/ErrorContext.jsx`: Global error handling
 - `src/components/GlobalErrorModal.jsx`: Shows API errors in a modal
 
-## User Listing Features
-- Sort users by role and enabled status by clicking the column headers.
-- Edit button is disabled for ROOT users. Enable/Disable button is disabled for ROOT and self.
-- Role is displayed in both user listing and profile.
+## Email Verification UI
+- User listing page displays email verification status ("Verified" or "Verify Email" button)
+- Admins can resend verification emails directly from the UI
+- Loading and error handling for resend actions
+- Sorting by email verification status is supported
+
+## Backend Integration
+- Calls `GET /v1/api/admin/users/{username}/resend-email` to trigger verification email
+- See backend docs for more details
 
 ## Notes
 - All API errors are shown in a global modal for consistent UX.

@@ -13,8 +13,8 @@ public interface AdminService {
   // change user password
   CreateUserResponse changeUserPassword(String userId, String newPassword);
 
-  // create user
-  CreateUserResponse createUser(CreateUserRequest request);
+  // resend verification email
+  void resendEmail(String userName);
 
   // disable user
   Boolean disableUser(Long userId);

@@ -25,14 +25,26 @@ services:
       KC_DB_PASSWORD: postgres
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HTTP_ENABLED: true
+      KC_BOOTSTRAP_ADMIN_EMAIL: abhishekit13006@gmail.com
+#      KC_HTTP_ENABLED: true
       KC_HOSTNAME: localhost
+
+      #https config
+      KC_HTTPS_CERTIFICATE_FILE: /etc/x509/https/localhost.crt
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /etc/x509/https/localhost.key
+      KC_HTTPS_PORT: 8443
+      KC_PROXY: edge
     ports:
       - "9003:8080"
+      - "8443:8443"
+
     networks:
       - keycloak_network
     volumes:
       - ./data/realm/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./certificates/keycloak/localhost.crt:/etc/x509/https/localhost.crt
+      - ./certificates/keycloak/localhost.key:/etc/x509/https/localhost.key
+      - ./data/keycloak-theme:/opt/keycloak/themes/keycloak-theme
 
 volumes:
   postgres_data:

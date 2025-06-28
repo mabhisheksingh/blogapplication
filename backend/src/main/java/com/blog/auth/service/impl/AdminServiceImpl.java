@@ -46,31 +46,13 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   @Transactional
-  public CreateUserResponse createUser(CreateUserRequest request) {
-    log.info("Creating new user with username: {}", request.getUsername());
-    log.debug("Request: Email={}, Roles={}", request.getEmail(), request.getRole());
-
-    CreateUserResponse response;
-    try {
-      response = keycloakClient.createUser(request, Set.of());
-      log.debug("Successfully created user in Keycloak");
-    } catch (Exception ex) {
-      log.error("Keycloak user creation failed: {}", ex.getMessage(), ex);
-      throw new RuntimeException("Failed to create user in identity provider", ex);
-    }
-
-    try {
-      User user = userMapper.toUser(request);
-      User savedUser = userRepository.save(user);
-      response.setUserId(savedUser.getId());
-      log.info("Successfully created user with ID: {}", savedUser.getId());
-      return response;
-    } catch (Exception ex) {
-      log.error("DB save failed, rolling back Keycloak user", ex);
-      keycloakClient.rollbackKeycloakUser(response.getUsername());
-      throw new RuntimeException("Failed to create user in database", ex);
-    }
+  public void resendEmail(String userName) {
+   log.info("resendEmail called with userName: {}", userName);
+   User user = adminRepository.findByUsername(userName)
+       .orElseThrow(() -> new UserNotFoundException(userName));
+   keycloakClient.resendEmail(userName);
   }
+
 
   @Transactional
   @Override
@@ -85,6 +67,9 @@ public class AdminServiceImpl implements AdminService {
     try {
       // First try to delete from database
       log.debug("Attempting to delete user from database");
+      if(isItSelfOrRootUser(userName)){
+        throw new OperationNotPermit(userName,"Operation not permitted");
+      }
       User user =
           userRepository
               .findByUsername(userName)

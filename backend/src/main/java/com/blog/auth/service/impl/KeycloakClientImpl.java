@@ -1,6 +1,7 @@
 package com.blog.auth.service.impl;
 
 import com.blog.auth.constant.APIConstant;
+import com.blog.auth.constant.KeycloakConstant;
 import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.request.UpdateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
@@ -44,6 +45,21 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
     return idpConfigProperties.getIdpName();
   }
 
+  @Override
+  public void resendEmail(String userName) {
+    log.info("KeycloakClientImpl resendEmail called");
+    String id = keycloak.realm(idpConfigProperties.getRealm())
+            .users()
+            .search(userName, true)
+            .get(0).getId();
+
+    log.info("ID : {}", id);
+    keycloak.realm(idpConfigProperties.getRealm())
+            .users()
+            .get(id)
+            .sendVerifyEmail();
+  }
+
   private static Keycloak keycloak;
 
   @PostConstruct
@@ -71,8 +87,12 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
         keycloak.realm(idpConfigProperties.getRealm()).users().create(userRepresentation)) {
       if (response.getStatus() != 201) {
         if (response.getStatus() == HttpStatus.CONFLICT.value()) {
-          log.error("User already exists");
-          throw new DuplicateUserException(userRepresentation.getUsername());
+          String errorMessage =
+              String.format(
+                  "Failed to create user in keycloak with status %s and entity is %s",
+                  response.getStatus(), response.readEntity(String.class));
+          log.error(errorMessage);
+          throw new DuplicateUserException( errorMessage);
         } else if (response.getStatus() == HttpStatus.FORBIDDEN.value()) {
           log.error("Failed to create user in keycloak {}", response.readEntity(String.class));
           throw new KeyCloakException(
@@ -92,12 +112,22 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
       String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
       this.updateOrAssignRole(userId, Set.of(createUserRequest.getRole()));
       log.info("User created with ID: {}", userId);
+      keycloak.realm(idpConfigProperties.getRealm())
+              .users().get(userId)
+              .sendVerifyEmail();
       CreateUserResponse createUserResponse = userMapper.toCreateUserResponse(createUserRequest);
       createUserResponse.setKeycloakId(userId);
       createUserResponse.setIsEnabled(true);
       return createUserResponse;
     } catch (Exception e) {
       log.error("Exception while creating user: {}", e.getMessage());
+      String userId = keycloak
+              .realm(idpConfigProperties.getRealm())
+              .users()
+              .search(createUserRequest.getUsername(), true)
+              .get(0)
+              .getId();
+      keycloak.realm(idpConfigProperties.getRealm()).users().delete(userId);
       throw e;
     } finally {
       log.info("KeycloakClientImpl createUser transaction completed");
@@ -123,10 +153,17 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
     userRepresentation.setFirstName(createUserRequest.getFirstName());
     userRepresentation.setLastName(createUserRequest.getLastName());
     userRepresentation.setEnabled(isEnabled);
-    userRepresentation.setEmailVerified(isEmailVerified);
+    userRepresentation.setEmailVerified(Boolean.FALSE);
     userRepresentation.setGroups(userGroup.stream().toList());
     userRepresentation.setCredentials(
         List.of(getCredentialRepresentation(createUserRequest.getPassword(), isTemporaryPassword)));
+
+    userRepresentation.setRequiredActions(
+            List.of(
+                    KeycloakConstant.VERIFY_EMAIL
+            )
+    );
+
     return userRepresentation;
   }
 
@@ -226,7 +263,8 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
                     .lastName(u.getLastName())
                     .username(u.getUsername())
                     .keycloakId(u.getId())
-                        .isEnabled(u.isEnabled())
+                        .isEmailVerified(u.isEmailVerified())
+                    .isEnabled(u.isEnabled())
                         .role(
                                 keycloak
                                 .realm(idpConfigProperties.getRealm())
