@@ -99,7 +99,9 @@ public class UserServiceImpl implements UserService {
   public CreateUserResponse updateUser(UpdateUserRequest updateUserRequest) {
     log.info("UserServiceImpl updateUser called");
     log.debug("UserServiceImpl updateUser request: {}", updateUserRequest);
-    String loggedInUser = UserUtils.getLoggedInUsername().orElseThrow(() -> new UserNotFoundException("User not found"));
+    String loggedInUser =
+        UserUtils.getLoggedInUsername()
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
     Optional<User> byUsername = userRepository.findByUsername(loggedInUser);
     if (byUsername.isEmpty()) {
       throw new UserNotFoundException(loggedInUser);

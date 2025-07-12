@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleOperationNotPermit(OperationNotPermit ex) {
     log.error("OperationNotPermit: {}", ex.getMessage(), ex);
     ErrorResponse errorResponse =
-            new ErrorResponse(ex.getStatus(), ex.getErrorCode(), ex.getMessage(), ex.getArgs());
+        new ErrorResponse(ex.getStatus(), ex.getErrorCode(), ex.getMessage(), ex.getArgs());
     return ResponseEntity.status(ex.getStatus()).body(errorResponse);
   }
 

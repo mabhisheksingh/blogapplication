@@ -11,7 +11,7 @@ public interface IDPClient {
 
   String getIDPName();
 
-   //resend email
+  // resend email
   void resendEmail(String userName);
 
   // create user with group

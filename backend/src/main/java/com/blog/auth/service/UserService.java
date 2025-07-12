@@ -13,9 +13,9 @@ public interface UserService {
   CreateUserResponse createUser(@Nonnull CreateUserRequest request);
 
   // create user from IDP
-  void saveUsersFromIDP( List<CreateUserResponse> response);
+  void saveUsersFromIDP(List<CreateUserResponse> response);
 
-  //get by userName
+  // get by userName
   CreateUserResponse getByUserName(String userName);
 
   // update user

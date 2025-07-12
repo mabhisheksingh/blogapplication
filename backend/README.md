@@ -32,6 +32,11 @@ com.blog
 
 | Version | Date       | Description                                                                 |
 |---------|------------|-----------------------------------------------------------------------------|
+| v1.4.0  | 2025-07-12 | Enhanced Keycloak event handling and improved logging                       |
+|         |            | - Added dedicated EventService for processing Keycloak events               |
+|         |            | - Improved Swagger documentation for event endpoints                        |
+|         |            | - Enhanced logging with method context for better debugging                 |
+|         |            | - Fixed event type handling with proper Keycloak EventType enum usage       |
 | v1.3.0  | 2025-06-21 | Centralized error handling, user info by username, improved docs             |
 |         |            | - Frontend: Global error modal (React Context), user profile fetch by username|
 |         |            | - Backend: GET /user/users/{username} endpoint, improved error JSON format   |
@@ -63,10 +68,48 @@ com.blog
 - **Self-Registration**: Public endpoint for user registration with USER role
 - **Admin Dashboard**: Dedicated admin interface for user management
 - **Keycloak Integration**: Seamless authentication and authorization with Keycloak
+- **Keycloak Event Handling**: Comprehensive event processing for user and admin events
 - **JWT Authentication**: Secure API endpoints with JWT tokens
 - **RESTful API**: Clean, resource-oriented API design
 - **OpenAPI Documentation**: Auto-generated API documentation with Swagger UI
 - **Comprehensive Exception Handling**: Consistent error responses with proper HTTP status codes
+- **Structured Logging**: Detailed logging with method context for better debugging and monitoring
+
+## Keycloak Event Listener Configuration
+
+The application uses a custom Keycloak event listener to forward events to the backend API. This is configured through Docker Compose:
+
+1. **Directory Structure**:
+   ```
+   backend/
+   ├── data/
+   │   ├── keycloak-providers/    # Directory for Keycloak event listener JAR
+   │   │   └── keycloak-event-listener-1.0.0.jar
+   │   ├── keycloak-theme/        # Custom Keycloak theme
+   │   └── realm/                 # Realm configuration
+   │       └── realm-export.json
+   ```
+
+2. **Setup Steps**:
+   - Download the event listener JAR from the GitHub release:
+     ```bash
+     mkdir -p ./data/keycloak-providers
+     curl -L https://github.com/mabhisheksingh/keycloak-webhook-bridge/releases/download/v1.0.0/keycloak-event-listener-1.0.0.jar -o ./data/keycloak-providers/keycloak-event-listener-1.0.0.jar
+     ```
+   - The Docker Compose configuration maps this directory to Keycloak's providers directory:
+     ```yaml
+     volumes:
+       - ./data/keycloak-providers:/opt/keycloak/providers
+     ```
+   - After starting Keycloak, enable the event listener in the Keycloak admin console:
+     - Go to Realm Settings > Events
+     - Enable "Save Events" and "Admin Events"
+     - Add "webhook" to the Event Listeners list
+
+3. **Event Processing**:
+   - Events are sent to the `/public/handle-event` endpoint
+   - The `EventService` processes these events and logs relevant information
+   - Both user events (login, logout, etc.) and admin events are supported
 
 ## Email Verification & Custom Keycloak Theme
 

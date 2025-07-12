@@ -5,6 +5,8 @@ import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.service.AdminService;
 import com.blog.auth.service.UserService;
 import com.blog.sharedkernel.dto.PagingResult;
+import com.blog.sharedkernel.event.LogEventObject;
+import com.blog.sharedkernel.event.TopicNames;
 import com.blog.sharedkernel.utils.UserUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +20,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,10 +41,14 @@ public class AdminController {
 
   private final AdminService adminService;
 
+  private final StreamBridge streamBridge;
+
   @Autowired
-  public AdminController(UserService userService, AdminService adminService) {
+  public AdminController(
+      UserService userService, AdminService adminService, StreamBridge streamBridge) {
     this.userService = userService;
     this.adminService = adminService;
+    this.streamBridge = streamBridge;
   }
 
   @Operation(
@@ -62,10 +69,19 @@ public class AdminController {
   @GetMapping(value = "/users-without-page", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ADMIN') or hasRole('ROOT')")
   public ResponseEntity<List<CreateUserResponse>> getAllUsers() {
-    log.info("Fetching all users without pagination");
+    LogEventObject logEventObject =
+        LogEventObject.builder()
+            .logLevel(LogEventObject.LogLevel.INFO)
+            .object("getAllUsers called ")
+            .build();
+    streamBridge.send(TopicNames.LOG_EVENT_OUT.getTopicName(), logEventObject);
     UserUtils.printLoggedInRealmRoles();
     List<CreateUserResponse> users = adminService.getAllUser();
-    log.debug("Successfully fetched {} users", users.size());
+
+    logEventObject.setLogLevel(LogEventObject.LogLevel.DEBUG);
+    logEventObject.setObject(String.format("Successfully fetched %d users", users.size()));
+
+    streamBridge.send(TopicNames.LOG_EVENT_OUT.getTopicName(), logEventObject);
     return ResponseEntity.ok(users);
   }
 
@@ -168,23 +184,22 @@ public class AdminController {
     return ResponseEntity.ok(userService.createUser(createUserRequest));
   }
 
-  //create endpoint for enable/disable user
-    @PatchMapping("/users/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Boolean> enableDisableUser(@PathVariable Long id, @RequestParam Boolean status) {
-      log.info("Attempting to enable/disable user with id: {} with status: {}",  id,status);
-      return ResponseEntity.ok(adminService.enableAndDisableUser(id,status));
-    }
+  // create endpoint for enable/disable user
+  @PatchMapping("/users/{id}/status")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Boolean> enableDisableUser(
+      @PathVariable Long id, @RequestParam Boolean status) {
+    log.info("Attempting to enable/disable user with id: {} with status: {}", id, status);
+    return ResponseEntity.ok(adminService.enableAndDisableUser(id, status));
+  }
 
-    @GetMapping ("/users/{userName}/resend-email")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> resendEmail(@PathVariable String userName) {
-      log.info("Attempting to resend email for user with username: {}", userName);
-      adminService.resendEmail(userName);
-      return ResponseEntity.ok().build();
-    }
-
-
+  @GetMapping("/users/{userName}/resend-email")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Void> resendEmail(@PathVariable String userName) {
+    log.info("Attempting to resend email for user with username: {}", userName);
+    adminService.resendEmail(userName);
+    return ResponseEntity.ok().build();
+  }
 
   //  @GetMapping("/posts")
   //  @PreAuthorize("hasRole('ADMIN')")

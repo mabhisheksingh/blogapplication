@@ -2,7 +2,6 @@ package com.blog.sharedkernel.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

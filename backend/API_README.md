@@ -18,6 +18,7 @@ Authorization: Bearer <your_jwt_token>
 - [Categories API](#categories-api)
 - [User Management](#user-management)
 - [Authentication](#authentication)
+- [Keycloak Event Handling](#keycloak-event-handling)
 - [User Email Verification & Keycloak Theme](#user-email-verification--keycloak-theme)
 
 ## Posts API
@@ -712,7 +713,103 @@ Deletes a user by their username. Requires ADMIN role.
 | --- | --- |
 | bearerAuth | |
 
-### User Email Verification & Keycloak Theme
+## Keycloak Event Handling
+
+### Handle Keycloak Events
+`POST /public/handle-event`
+
+**Description**: Processes events from Keycloak including user events (login, logout, registration, etc.) and admin events
+
+**Authentication**: None (Public endpoint)
+
+**Request Body**:
+```json
+{
+  "eventType": "USER_EVENT",
+  "event": {
+    "type": "LOGIN",
+    "userId": "user-123",
+    "realmId": "fusion-master",
+    "clientId": "blog-auth-private",
+    "sessionId": "session-456",
+    "ipAddress": "127.0.0.1",
+    "details": {
+      "auth_method": "openid-connect",
+      "auth_type": "code"
+    }
+  }
+}
+```
+
+**Response**:
+- `200 OK` - Event processed successfully
+- `400 Bad Request` - Invalid event format
+
+**Supported Event Types**:
+- User Events:
+  - LOGIN - User login events
+  - LOGOUT - User logout events
+  - REGISTER - User registration events
+  - UPDATE_PASSWORD - Password update events
+  - CODE_TO_TOKEN - Token exchange events
+  - And other Keycloak EventType enum values
+
+- Admin Events:
+  - CREATE operations on users
+  - UPDATE operations on users
+  - And other admin operations
+
+**Example Response**:
+```json
+{
+  "eventType": "USER_EVENT",
+  "event": {
+    "type": "LOGIN",
+    "userId": "user-123",
+    "realmId": "fusion-master"
+  }
+}
+```
+
+**Notes**:
+- This endpoint is used by Keycloak to notify the application about events
+- Events are processed by the EventService which handles different types of events
+- Detailed logging is available for debugging event processing
+
+### Keycloak Event Listener Configuration
+
+The application uses a custom Keycloak event listener to forward events to the backend API. This requires:
+
+1. **Event Listener JAR**:
+   - The event listener JAR must be placed in the `data/keycloak-providers` directory
+   - Download from: `https://github.com/mabhisheksingh/keycloak-webhook-bridge/releases/download/v1.0.0/keycloak-event-listener-1.0.0.jar`
+
+2. **Docker Compose Configuration**:
+   ```yaml
+   volumes:
+     - ./data/keycloak-providers:/opt/keycloak/providers
+   ```
+
+3. **Keycloak Admin Console Configuration**:
+   - Go to Realm Settings > Events
+   - Enable "Save Events" and "Admin Events"
+   - Add "webhook" to the Event Listeners list
+   - Configure the webhook URL to point to your backend's `/public/handle-event` endpoint
+
+4. **Event Flow**:
+   - Keycloak event occurs (login, logout, user creation, etc.)
+   - Event listener captures the event and sends it to the configured webhook URL
+   - Backend receives the event at `/public/handle-event`
+   - `EventService` processes the event and logs relevant information
+   - Both user events and admin events are handled appropriately
+
+5. **Logging**:
+   - All events are logged with method context for better debugging
+   - User events include user ID and event type
+   - Admin events include operation type and resource path
+   - Debug-level logging includes full event details
+
+## User Email Verification & Keycloak Theme
 
 ### Resend Verification Email
 `GET /v1/api/admin/users/{username}/resend-email`

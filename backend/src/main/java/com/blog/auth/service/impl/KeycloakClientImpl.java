@@ -48,16 +48,16 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
   @Override
   public void resendEmail(String userName) {
     log.info("KeycloakClientImpl resendEmail called");
-    String id = keycloak.realm(idpConfigProperties.getRealm())
+    String id =
+        keycloak
+            .realm(idpConfigProperties.getRealm())
             .users()
             .search(userName, true)
-            .get(0).getId();
+            .get(0)
+            .getId();
 
     log.info("ID : {}", id);
-    keycloak.realm(idpConfigProperties.getRealm())
-            .users()
-            .get(id)
-            .sendVerifyEmail();
+    keycloak.realm(idpConfigProperties.getRealm()).users().get(id).sendVerifyEmail();
   }
 
   private static Keycloak keycloak;
@@ -92,7 +92,7 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
                   "Failed to create user in keycloak with status %s and entity is %s",
                   response.getStatus(), response.readEntity(String.class));
           log.error(errorMessage);
-          throw new DuplicateUserException( errorMessage);
+          throw new DuplicateUserException(errorMessage);
         } else if (response.getStatus() == HttpStatus.FORBIDDEN.value()) {
           log.error("Failed to create user in keycloak {}", response.readEntity(String.class));
           throw new KeyCloakException(
@@ -112,16 +112,15 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
       String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
       this.updateOrAssignRole(userId, Set.of(createUserRequest.getRole()));
       log.info("User created with ID: {}", userId);
-      keycloak.realm(idpConfigProperties.getRealm())
-              .users().get(userId)
-              .sendVerifyEmail();
+      keycloak.realm(idpConfigProperties.getRealm()).users().get(userId).sendVerifyEmail();
       CreateUserResponse createUserResponse = userMapper.toCreateUserResponse(createUserRequest);
       createUserResponse.setKeycloakId(userId);
       createUserResponse.setIsEnabled(true);
       return createUserResponse;
     } catch (Exception e) {
       log.error("Exception while creating user: {}", e.getMessage());
-      String userId = keycloak
+      String userId =
+          keycloak
               .realm(idpConfigProperties.getRealm())
               .users()
               .search(createUserRequest.getUsername(), true)
@@ -158,11 +157,7 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
     userRepresentation.setCredentials(
         List.of(getCredentialRepresentation(createUserRequest.getPassword(), isTemporaryPassword)));
 
-    userRepresentation.setRequiredActions(
-            List.of(
-                    KeycloakConstant.VERIFY_EMAIL
-            )
-    );
+    userRepresentation.setRequiredActions(List.of(KeycloakConstant.VERIFY_EMAIL));
 
     return userRepresentation;
   }
@@ -263,21 +258,21 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
                     .lastName(u.getLastName())
                     .username(u.getUsername())
                     .keycloakId(u.getId())
-                        .isEmailVerified(u.isEmailVerified())
+                    .isEmailVerified(u.isEmailVerified())
                     .isEnabled(u.isEnabled())
-                        .role(
-                                keycloak
-                                .realm(idpConfigProperties.getRealm())
-                                        .users().get(u.getId())
-                                        .roles()
-                                        .realmLevel()
-                                        .listEffective()
-                                        .stream()
-                                        .map(RoleRepresentation::getName)
-                                        .filter(APIConstant.ALLOWED_ROLES::contains)
-                                        .findFirst().orElse(APIConstant.ROLE_NOT_FOUND)
-                                )
-
+                    .role(
+                        keycloak
+                            .realm(idpConfigProperties.getRealm())
+                            .users()
+                            .get(u.getId())
+                            .roles()
+                            .realmLevel()
+                            .listEffective()
+                            .stream()
+                            .map(RoleRepresentation::getName)
+                            .filter(APIConstant.ALLOWED_ROLES::contains)
+                            .findFirst()
+                            .orElse(APIConstant.ROLE_NOT_FOUND))
                     .build())
         .toList();
   }
@@ -285,35 +280,26 @@ public class KeycloakClientImpl implements KeycloakClientIDP {
   @Override
   public void disableUser(String userId) {
     log.info("KeycloakClientImpl disableUser called");
-    UserResource userResource = keycloak
-            .realm(idpConfigProperties.getRealm())
-            .users()
-            .get(userId);
+    UserResource userResource = keycloak.realm(idpConfigProperties.getRealm()).users().get(userId);
     UserRepresentation userRepresentation = userResource.toRepresentation();
     userRepresentation.setEnabled(false);
-    keycloak
-            .realm(idpConfigProperties.getRealm())
-            .users()
-            .get(userId)
-            .update(userRepresentation);
-    log.info("User disabled with ID: {} and its current status is: {}", userId, userRepresentation.isEnabled());
+    keycloak.realm(idpConfigProperties.getRealm()).users().get(userId).update(userRepresentation);
+    log.info(
+        "User disabled with ID: {} and its current status is: {}",
+        userId,
+        userRepresentation.isEnabled());
   }
 
   @Override
   public void enableUser(String userId) {
     log.info("KeycloakClientImpl enableUser called");
-    UserResource userResource = keycloak
-            .realm(idpConfigProperties.getRealm())
-            .users()
-            .get(userId);
+    UserResource userResource = keycloak.realm(idpConfigProperties.getRealm()).users().get(userId);
     UserRepresentation userRepresentation = userResource.toRepresentation();
     userRepresentation.setEnabled(true);
-    keycloak
-            .realm(idpConfigProperties.getRealm())
-            .users()
-            .get(userId)
-            .update(userRepresentation);
-    log.info("User enabled with ID: {} and its current status is: {}", userId, userResource.toRepresentation().isEnabled());
-
+    keycloak.realm(idpConfigProperties.getRealm()).users().get(userId).update(userRepresentation);
+    log.info(
+        "User enabled with ID: {} and its current status is: {}",
+        userId,
+        userResource.toRepresentation().isEnabled());
   }
 }

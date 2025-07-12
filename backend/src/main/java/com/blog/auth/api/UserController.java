@@ -37,7 +37,8 @@ public class UserController {
 
   @PutMapping("/users/{userId}")
   @Operation(summary = "Update user info")
-  public ResponseEntity<CreateUserResponse> updateUser(@RequestBody UpdateUserRequest updateUserRequest) {
+  public ResponseEntity<CreateUserResponse> updateUser(
+      @RequestBody UpdateUserRequest updateUserRequest) {
     log.info("UpdateUser called");
     log.info("UpdateUserRequest: {}", updateUserRequest);
     CreateUserResponse createUserResponse = userService.updateUser(updateUserRequest);

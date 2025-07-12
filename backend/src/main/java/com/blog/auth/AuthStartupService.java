@@ -3,9 +3,7 @@ package com.blog.auth;
 import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.service.IDPClient;
 import com.blog.auth.service.UserService;
-
 import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationRunner;
@@ -20,7 +18,8 @@ public class AuthStartupService {
 
   private final IDPClient idpClient;
 
-  public AuthStartupService(UserService userService,@Qualifier("KeycloakClient") IDPClient idpClient) {
+  public AuthStartupService(
+      UserService userService, @Qualifier("KeycloakClient") IDPClient idpClient) {
     this.idpClient = idpClient;
     this.userService = userService;
   }

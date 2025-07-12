@@ -23,6 +23,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<spring-modulith.version>1.4.0</spring-modulith.version>
+		<spring-cloud.version>2025.0.0</spring-cloud.version>
+		<keycloak.version>26.0.0</keycloak.version>
 	</properties>
 
 	<dependencies>
@@ -80,8 +82,16 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-admin-client</artifactId>
-			<version>26.0.0</version>
+			<version>${keycloak.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.keycloak/keycloak-events-api -->
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-events-api</artifactId>
+			<version>1.8.1.Final</version>
+			<scope>provided</scope>
+		</dependency>
+
 
 		<!-- Database -->
 		<dependency>
@@ -97,6 +107,20 @@
 			<artifactId>mapstruct</artifactId>
 			<version>${org.mapstruct.version}</version>
 		</dependency>
+
+		<!-- RabbitMQ -->
+		<!-- Spring Cloud Stream core -->
+		<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-stream</artifactId>
+		</dependency>
+
+		<!-- Binder for RabbitMQ -->
+		<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-stream-binder-rabbit</artifactId>
+		</dependency>
+
 
 		<!-- SpringDoc OpenAPI -->
 		<dependency>
@@ -123,6 +147,13 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.modulith</groupId>
 				<artifactId>spring-modulith-bom</artifactId>
 				<version>${spring-modulith.version}</version>
@@ -131,15 +162,15 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	
-	
 
-	
+
+
+
 
 
 	<build>
 		<plugins>
-			
+
 		<plugin>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-maven-plugin</artifactId>

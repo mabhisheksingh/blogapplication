@@ -1,4 +1,19 @@
 services:
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - keycloak_network
+
+
   postgres:
     image: postgres:16
     restart: always
@@ -19,21 +34,31 @@ services:
     depends_on:
       - postgres
     environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/keycloak
-      KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: postgres
+#      KC_DB: postgres
+#      KC_DB_URL: jdbc:postgresql://postgres/keycloak
+#      KC_DB_USERNAME: postgres
+#      KC_DB_PASSWORD: postgres
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_BOOTSTRAP_ADMIN_EMAIL: abhishekit13006@gmail.com
 #      KC_HTTP_ENABLED: true
       KC_HOSTNAME: localhost
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+
+      # Events enabled
+      KC_EVENT_METRICS_USER_ENABLED: true
+      KC_EVENT_METRICS_USER_EVENTS: client_info,login,logout,refresh_token,client_login
 
       #https config
       KC_HTTPS_CERTIFICATE_FILE: /etc/x509/https/localhost.crt
       KC_HTTPS_CERTIFICATE_KEY_FILE: /etc/x509/https/localhost.key
       KC_HTTPS_PORT: 8443
       KC_PROXY: edge
+
+      #Webhooks
+      WEBHOOK_URLS: http://localhost:9001/v1/api/public/handle-event
+      HOST_IP: 192.168.1.15
     ports:
       - "9003:8080"
       - "8443:8443"
@@ -42,12 +67,14 @@ services:
       - keycloak_network
     volumes:
       - ./data/realm/realm-export.json:/opt/keycloak/data/import/realm.json
-      - ./certificates/keycloak/localhost.crt:/etc/x509/https/localhost.crt
-      - ./certificates/keycloak/localhost.key:/etc/x509/https/localhost.key
+#      - ./certificates/keycloak/localhost.crt:/etc/x509/https/localhost.crt
+#      - ./certificates/keycloak/localhost.key:/etc/x509/https/localhost.key
+      - ./certificates/keycloak:/etc/x509/https
       - ./data/keycloak-theme:/opt/keycloak/themes/keycloak-theme
-
+      - ./data/keycloak-providers:/opt/keycloak/providers
 volumes:
   postgres_data:
+  rabbitmq_data:
 
 networks:
   keycloak_network:

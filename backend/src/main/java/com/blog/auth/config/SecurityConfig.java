@@ -20,7 +20,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity // Enables Spring Security's web security features
@@ -66,12 +65,12 @@ public class SecurityConfig {
         );
 
     // ✅ Register your custom filter before Spring Security's auth filter
-//    http.addFilterBefore(new AuthFilter(), AuthenticationFilter.class);// Enable to debug only
+    //    http.addFilterBefore(new AuthFilter(), AuthenticationFilter.class);// Enable to debug only
     // Enable custom authentication entry point and access denied handler
     http.exceptionHandling(
-            ex ->
-                ex.authenticationEntryPoint(customAuthenticationEntryPoint)
-                    .accessDeniedHandler(customAccessDeniedHandler));
+        ex ->
+            ex.authenticationEntryPoint(customAuthenticationEntryPoint)
+                .accessDeniedHandler(customAccessDeniedHandler));
     // Enable OAuth2 Resource Server for JWT token validation
     http.oauth2ResourceServer(
         oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

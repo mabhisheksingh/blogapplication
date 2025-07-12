@@ -1,7 +1,6 @@
 package com.blog.auth.service.impl;
 
 import com.blog.auth.constant.APIConstant;
-import com.blog.auth.dto.request.CreateUserRequest;
 import com.blog.auth.dto.response.CreateUserResponse;
 import com.blog.auth.mapper.UserMapper;
 import com.blog.auth.model.User;
@@ -9,14 +8,12 @@ import com.blog.auth.repository.AdminRepository;
 import com.blog.auth.repository.UserRepository;
 import com.blog.auth.service.AdminService;
 import com.blog.sharedkernel.dto.PagingResult;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-
 import com.blog.sharedkernel.exception.OperationNotPermit;
 import com.blog.sharedkernel.exception.UserNotFoundException;
 import com.blog.sharedkernel.utils.UserUtils;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -47,12 +44,13 @@ public class AdminServiceImpl implements AdminService {
   @Override
   @Transactional
   public void resendEmail(String userName) {
-   log.info("resendEmail called with userName: {}", userName);
-   User user = adminRepository.findByUsername(userName)
-       .orElseThrow(() -> new UserNotFoundException(userName));
-   keycloakClient.resendEmail(userName);
+    log.info("resendEmail called with userName: {}", userName);
+    User user =
+        adminRepository
+            .findByUsername(userName)
+            .orElseThrow(() -> new UserNotFoundException(userName));
+    keycloakClient.resendEmail(userName);
   }
-
 
   @Transactional
   @Override
@@ -67,8 +65,8 @@ public class AdminServiceImpl implements AdminService {
     try {
       // First try to delete from database
       log.debug("Attempting to delete user from database");
-      if(isItSelfOrRootUser(userName)){
-        throw new OperationNotPermit(userName,"Operation not permitted");
+      if (isItSelfOrRootUser(userName)) {
+        throw new OperationNotPermit(userName, "Operation not permitted");
       }
       User user =
           userRepository
@@ -103,14 +101,15 @@ public class AdminServiceImpl implements AdminService {
   public Boolean enableUser(Long userId) {
     log.info("enableUser called with userId: {}", userId);
     Optional<User> user = userRepository.findById(userId);
-    User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
-    String loggedInUserName = UserUtils.getLoggedInUsername().orElseThrow(
-        () -> new RuntimeException("You are not logged in")
-    );
-    if(isItSelfOrRootUser(user1.getUsername())){
-      throw new OperationNotPermit(loggedInUserName,"You can't enable/disable yourself or root user");
+    User user1 = user.orElseThrow(() -> new UserNotFoundException(userId.toString()));
+    String loggedInUserName =
+        UserUtils.getLoggedInUsername()
+            .orElseThrow(() -> new RuntimeException("You are not logged in"));
+    if (isItSelfOrRootUser(user1.getUsername())) {
+      throw new OperationNotPermit(
+          loggedInUserName, "You can't enable/disable yourself or root user");
     }
-    try{
+    try {
       user1.setIsEnabled(true);
       String keycloakId = user1.getKeycloakId();
       keycloakClient.enableUser(keycloakId);
@@ -129,14 +128,15 @@ public class AdminServiceImpl implements AdminService {
   public Boolean disableUser(Long userId) {
     log.info("disableUser called with userId: {}", userId);
     Optional<User> user = userRepository.findById(userId);
-    User user1 = user.orElseThrow(()-> new UserNotFoundException(userId.toString()));
-    String loggedInUserName = UserUtils.getLoggedInUsername().orElseThrow(
-            () -> new RuntimeException("You are not logged in")
-    );
-    if(isItSelfOrRootUser(user1.getUsername())){
-      throw new OperationNotPermit(loggedInUserName,"You can't enable/disable yourself or root user");
+    User user1 = user.orElseThrow(() -> new UserNotFoundException(userId.toString()));
+    String loggedInUserName =
+        UserUtils.getLoggedInUsername()
+            .orElseThrow(() -> new RuntimeException("You are not logged in"));
+    if (isItSelfOrRootUser(user1.getUsername())) {
+      throw new OperationNotPermit(
+          loggedInUserName, "You can't enable/disable yourself or root user");
     }
-    try{
+    try {
       user1.setIsEnabled(false);
       String keycloakId = user1.getKeycloakId();
       keycloakClient.disableUser(keycloakId);
@@ -152,8 +152,11 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   public Boolean enableAndDisableUser(Long userId, Boolean enableUser) {
-    log.info("enableAndDisableUser called with userId: {}, isEnabled: {}", userId, enableUser ? "true" : "false");
-    return enableUser?this.enableUser(userId):this.disableUser(userId);
+    log.info(
+        "enableAndDisableUser called with userId: {}, isEnabled: {}",
+        userId,
+        enableUser ? "true" : "false");
+    return enableUser ? this.enableUser(userId) : this.disableUser(userId);
   }
 
   @Override
@@ -181,11 +184,11 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public Boolean isItSelfOrRootUser(String requestedUserName) {
     log.info("isItSelfOrRootUser called with requestedUserName: {}", requestedUserName);
-    String loggedInUsername = UserUtils.getLoggedInUsername().orElseThrow(
-            () -> new OperationNotPermit(requestedUserName,"Token not found")
-    );
-    return Objects.equals(loggedInUsername, requestedUserName)  ||
-            Objects.equals(requestedUserName, APIConstant.ROOT_USER_NAME);
+    String loggedInUsername =
+        UserUtils.getLoggedInUsername()
+            .orElseThrow(() -> new OperationNotPermit(requestedUserName, "Token not found"));
+    return Objects.equals(loggedInUsername, requestedUserName)
+        || Objects.equals(requestedUserName, APIConstant.ROOT_USER_NAME);
   }
 
   @Override
